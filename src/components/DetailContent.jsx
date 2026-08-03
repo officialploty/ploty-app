@@ -1,8 +1,11 @@
+import { useState } from 'react';
 import { detailFields } from '../fields';
 import MiniMap from '../MiniMap';
+import MediaLightbox from './MediaLightbox';
 
 export default function DetailContent({ sel, saved, onToggleSave, onContact }) {
   const d = detailFields(sel);
+  const [lightboxIndex, setLightboxIndex] = useState(null);
   if (!d) return null;
   const isSaved = saved.includes(sel.id);
 
@@ -40,10 +43,15 @@ export default function DetailContent({ sel, saved, onToggleSave, onContact }) {
 
       <div className="pmScroll" style={{ display: 'flex', gap: 9, overflowX: 'auto', paddingBottom: 2 }}>
         {d.media.map((m, i) => (
-          <div key={i} style={{
-            flex: 'none', width: 150, height: 104, borderRadius: 16, overflow: 'hidden', position: 'relative',
-            background: m.bg, backgroundSize: 'cover', backgroundPosition: 'center', border: '1px solid rgba(255,255,255,.1)',
-          }}>
+          <div
+            key={i}
+            onClick={() => setLightboxIndex(i)}
+            style={{
+              flex: 'none', width: 150, height: 104, borderRadius: 16, overflow: 'hidden', position: 'relative',
+              background: m.bg, backgroundSize: 'cover', backgroundPosition: 'center', border: '1px solid rgba(255,255,255,.1)',
+              cursor: 'pointer',
+            }}
+          >
             {m.isVideo && (
               <div style={{
                 position: 'absolute', left: '50%', top: '50%', margin: '-17px 0 0 -17px', width: 34, height: 34,
@@ -138,6 +146,10 @@ export default function DetailContent({ sel, saved, onToggleSave, onContact }) {
           </div>
         </div>
       </div>
+
+      {lightboxIndex !== null && (
+        <MediaLightbox media={sel.media} index={lightboxIndex} onClose={() => setLightboxIndex(null)} />
+      )}
     </div>
   );
 }
