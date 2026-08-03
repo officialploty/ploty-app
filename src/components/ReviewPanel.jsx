@@ -7,7 +7,7 @@ export default function ReviewPanel({ pm }) {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div style={{ padding: '18px 18px 12px', display: 'flex', flexDirection: 'column', gap: 4 }}>
         <div style={{ font: '800 24px/1 Manrope', color: '#fff', letterSpacing: '-.02em' }}>{list.length} layout{list.length === 1 ? '' : 's'} awaiting review</div>
-        <div style={{ font: '500 12px/1.4 Manrope', color: 'rgba(255,255,255,.42)' }}>Demo mode — any signed-in account can review for now. In production this would be limited to Ploty staff.</div>
+        <div style={{ font: '500 12px/1.4 Manrope', color: 'rgba(255,255,255,.42)' }}>Only Ploty staff accounts can approve or reject listings here.</div>
       </div>
       <div className="pmScroll" style={{ flex: 1, overflowY: 'auto', padding: '0 18px 30px', display: 'flex', flexDirection: 'column', gap: 12 }}>
         {list.map((p) => <ReviewCard key={p.id} p={p} pm={pm} />)}

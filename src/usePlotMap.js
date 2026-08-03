@@ -69,7 +69,7 @@ async function callEdgeFunction(name, body) {
 }
 
 const emptyForm = {
-  kind: 'plot', locality: '', priceMode: 'ppsf', price: '', size: '', notes: '', contact: '', media: [], amenities: [],
+  kind: 'plot', locality: '', area: '', priceMode: 'ppsf', price: '', size: '', notes: '', contact: '', media: [], amenities: [],
   plots: '', sizeMin: '', sizeMax: '', ppsfMin: '', ppsfMax: '', company: '',
 };
 
@@ -109,6 +109,7 @@ export function usePlotMap() {
   const toastTimer = useRef(null);
   const [auth, setAuthState] = useState(null);
   const [authPrompt, setAuthPrompt] = useState(null);
+  const [publishing, setPublishing] = useState(false);
 
   const flash = useCallback((msg) => {
     setToast(msg);
@@ -236,7 +237,7 @@ export function usePlotMap() {
   const derivedPpsf = form.priceMode === 'ppsf' ? price : (size ? price / size : 0);
   const derivedTotal = form.priceMode === 'ppsf' ? price * size : price;
   const fb = band(derivedPpsf || 0);
-  const canPublish = !!pin && !!form.locality.trim() && (form.kind === 'layout'
+  const canPublish = !!pin && !!form.locality.trim() && !!form.area && (form.kind === 'layout'
     ? num(form.plots) > 0 && num(form.ppsfMin) > 0 && num(form.sizeMin) > 0 && !!form.company.trim()
     : derivedPpsf > 0 && size > 0);
 
@@ -247,7 +248,9 @@ export function usePlotMap() {
       flash(form.kind === 'layout' ? 'Company name, plot count, sizes and price are required' : 'Locality, price and size are required');
       return;
     }
-    const areaFor = area === 'All areas' ? CITIES[city].areas[1] : area;
+    if (publishing) return;
+    setPublishing(true);
+    const areaFor = form.area;
     if (form.kind === 'layout') {
       const lo = num(form.ppsfMin), hi = Math.max(num(form.ppsfMax) || lo, lo);
       const smin = num(form.sizeMin), smax = Math.max(num(form.sizeMax) || smin, smin);
@@ -269,6 +272,8 @@ export function usePlotMap() {
         flash('Layout submitted for review — you’ll be notified once it’s approved');
       } catch (err) {
         flash('Could not submit layout: ' + err.message);
+      } finally {
+        setPublishing(false);
       }
       return;
     }
@@ -289,8 +294,10 @@ export function usePlotMap() {
       flash(nearby_warning?.length ? 'Plot published — heads up, a similar pin exists nearby' : 'Plot published — live for everyone');
     } catch (err) {
       flash('Could not publish plot: ' + err.message);
+    } finally {
+      setPublishing(false);
     }
-  }, [canPublish, form, area, city, pin, derivedPpsf, size, flash, auth]);
+  }, [canPublish, publishing, form, area, city, pin, derivedPpsf, size, flash, auth]);
 
   const pendingLayouts = useMemo(
     () => plots.filter((p) => p.kind === 'layout' && p.status === 'pending'),
@@ -399,7 +406,7 @@ export function usePlotMap() {
   return {
     plots, plotsLoading, visible, sel, tab, city, area, query, focus, cityMenu, areaMenu, sort, priceFilter, kindFilter,
     mode, pin, form, saved, toast, placing, choosingKind, formOpen, detailOpen,
-    derivedPpsf, derivedTotal, fb, canPublish, nearbyDuplicates, pendingLayouts,
+    derivedPpsf, derivedTotal, fb, canPublish, publishing, nearbyDuplicates, pendingLayouts,
     auth, authPrompt, openAuthPrompt, cancelAuthPrompt, loginWithGoogle, logout,
     setTab, setQuery, setFocus, setCityMenu, setAreaMenu, setSort, setPriceFilter, setKindFilter,
     setForm, setPin,

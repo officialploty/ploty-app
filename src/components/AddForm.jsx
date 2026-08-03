@@ -1,12 +1,13 @@
-import { AMENITIES } from '../data';
+import { AMENITIES, CITIES } from '../data';
 import { inr, ppsfLabel, kShort, num } from '../utils';
 
 const label = { font: '700 11px/1 Manrope', color: 'rgba(255,255,255,.45)', letterSpacing: '.12em' };
 const fieldStyle = { height: 52, padding: '0 16px', borderRadius: 16, background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.12)', outline: 0, font: '600 15px/1 Manrope', color: '#fff' };
 
 export default function AddForm({ pm, onBackToPlacing }) {
-  const { form, setForm, pin, derivedPpsf, derivedTotal, fb, canPublish, publish, cancelAdd, onFiles, auth, backToKind } = pm;
+  const { form, setForm, pin, city, derivedPpsf, derivedTotal, fb, canPublish, publishing, publish, cancelAdd, onFiles, auth, backToKind } = pm;
   const f = form;
+  const areaOptions = CITIES[city].areas.filter((a) => a !== 'All areas');
 
   return (
     <div style={{ padding: '8px 20px 40px', display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -41,6 +42,17 @@ export default function AddForm({ pm, onBackToPlacing }) {
           placeholder={f.kind === 'layout' ? 'e.g. Thalambur Greenfields' : 'e.g. Kelambakkam, OMR'}
           style={fieldStyle}
         />
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={label}>AREA</div>
+        <select
+          value={f.area} onChange={(e) => setForm('area', e.target.value)}
+          style={{ ...fieldStyle, appearance: 'auto' }}
+        >
+          <option value="" disabled>Select the area this pin is actually in</option>
+          {areaOptions.map((a) => <option key={a} value={a}>{a}</option>)}
+        </select>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -180,11 +192,11 @@ export default function AddForm({ pm, onBackToPlacing }) {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 2 }}>
-        <div onClick={publish} style={{
-          height: 58, borderRadius: 20, background: canPublish ? 'linear-gradient(110deg,#8b7bff,#35e0c0)' : 'rgba(255,255,255,.08)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 18px 36px -16px rgba(139,123,255,.7)',
+        <div onClick={canPublish && !publishing ? publish : undefined} style={{
+          height: 58, borderRadius: 20, background: canPublish && !publishing ? 'linear-gradient(110deg,#8b7bff,#35e0c0)' : 'rgba(255,255,255,.08)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: canPublish && !publishing ? 'pointer' : 'default', boxShadow: '0 18px 36px -16px rgba(139,123,255,.7)',
         }}>
-          <span style={{ font: '800 16px/1 Manrope', color: canPublish ? '#0d1018' : 'rgba(255,255,255,.35)', letterSpacing: '-.01em' }}>{canPublish ? (f.kind === 'layout' ? 'Publish layout' : 'Publish plot') : 'Fill the required fields'}</span>
+          <span style={{ font: '800 16px/1 Manrope', color: canPublish && !publishing ? '#0d1018' : 'rgba(255,255,255,.35)', letterSpacing: '-.01em' }}>{publishing ? 'Publishing…' : canPublish ? (f.kind === 'layout' ? 'Publish layout' : 'Publish plot') : 'Fill the required fields'}</span>
         </div>
         <div onClick={cancelAdd} style={{ height: 46, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
           <span style={{ font: '700 13.5px/1 Manrope', color: 'rgba(255,255,255,.42)' }}>Discard</span>
