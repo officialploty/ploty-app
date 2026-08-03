@@ -5,15 +5,16 @@ const label = { font: '700 11px/1 Manrope', color: 'rgba(255,255,255,.45)', lett
 const fieldStyle = { height: 52, padding: '0 16px', borderRadius: 16, background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.12)', outline: 0, font: '600 15px/1 Manrope', color: '#fff' };
 
 export default function AddForm({ pm, onBackToPlacing }) {
-  const { form, setForm, pin, city, derivedPpsf, derivedTotal, fb, canPublish, publishing, publish, cancelAdd, onFiles, auth, backToKind } = pm;
+  const { form, setForm, pin, city, derivedPpsf, derivedTotal, fb, canPublish, publishing, publish, cancelAdd, onFiles, auth, backToKind, editingId } = pm;
   const f = form;
+  const isEditing = !!editingId;
   const areaOptions = CITIES[city].areas.filter((a) => a !== 'All areas');
 
   return (
     <div style={{ padding: '8px 20px 40px', display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <div style={{ font: '800 12px/1 Manrope', color: '#8b7bff', letterSpacing: '.16em' }}>STEP 3 OF 3</div>
+          <div style={{ font: '800 12px/1 Manrope', color: '#8b7bff', letterSpacing: '.16em' }}>{isEditing ? 'EDITING' : 'STEP 3 OF 3'}</div>
           <div style={{ font: '800 22px/1.1 Manrope', color: '#fff', letterSpacing: '-.02em' }}>{f.kind === 'layout' ? 'Layout details' : 'Plot details'}</div>
         </div>
         <div onClick={cancelAdd} style={{ width: 32, height: 32, borderRadius: 99, background: 'rgba(255,255,255,.09)', color: 'rgba(255,255,255,.7)', font: '600 16px/32px Manrope', textAlign: 'center', cursor: 'pointer', flex: 'none' }}>×</div>
@@ -32,7 +33,7 @@ export default function AddForm({ pm, onBackToPlacing }) {
         </span>
         {f.kind === 'plot' && auth && <span style={{ font: '700 12px/1 Manrope', color: '#fff' }}>{auth.name}</span>}
         <div style={{ flex: 1 }} />
-        <span onClick={backToKind} style={{ font: '700 11.5px/1 Manrope', color: '#35e0c0', cursor: 'pointer' }}>Change</span>
+        {!isEditing && <span onClick={backToKind} style={{ font: '700 11.5px/1 Manrope', color: '#35e0c0', cursor: 'pointer' }}>Change</span>}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -57,9 +58,10 @@ export default function AddForm({ pm, onBackToPlacing }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-          <div style={label}>PHOTOS &amp; VIDEO</div>
+          <div style={label}>{isEditing ? 'ADD MORE PHOTOS & VIDEO' : 'PHOTOS & VIDEO'}</div>
           <div style={{ font: '600 11px/1 Manrope', color: 'rgba(255,255,255,.32)' }}>{f.media.length ? f.media.length + ' added' : 'optional, up to 8'}</div>
         </div>
+        {isEditing && <div style={{ font: '500 11.5px/1.5 Manrope', color: 'rgba(255,255,255,.4)', marginTop: -4 }}>These are added on top of your existing photos, not a replacement for them.</div>}
         <div className="pmScroll" style={{ display: 'flex', gap: 9, overflowX: 'auto', paddingBottom: 2 }}>
           <label style={{ flex: 'none', width: 96, height: 96, borderRadius: 16, border: '1.5px dashed rgba(53,224,192,.5)', background: 'rgba(53,224,192,.07)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 7, cursor: 'pointer' }}>
             <div style={{ position: 'relative', width: 18, height: 18 }}>
@@ -196,10 +198,12 @@ export default function AddForm({ pm, onBackToPlacing }) {
           height: 58, borderRadius: 20, background: canPublish && !publishing ? 'linear-gradient(110deg,#3ecf6e,#2fae59)' : 'rgba(255,255,255,.08)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: canPublish && !publishing ? 'pointer' : 'default', boxShadow: '0 18px 36px -16px rgba(46,174,89,.7)',
         }}>
-          <span style={{ font: '800 16px/1 Manrope', color: canPublish && !publishing ? '#0d1018' : 'rgba(255,255,255,.35)', letterSpacing: '-.01em' }}>{publishing ? 'Publishing…' : canPublish ? (f.kind === 'layout' ? 'Publish layout' : 'Publish plot') : 'Fill the required fields'}</span>
+          <span style={{ font: '800 16px/1 Manrope', color: canPublish && !publishing ? '#0d1018' : 'rgba(255,255,255,.35)', letterSpacing: '-.01em' }}>
+            {publishing ? (isEditing ? 'Saving…' : 'Publishing…') : canPublish ? (isEditing ? 'Save changes' : (f.kind === 'layout' ? 'Publish layout' : 'Publish plot')) : 'Fill the required fields'}
+          </span>
         </div>
         <div onClick={cancelAdd} style={{ height: 46, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-          <span style={{ font: '700 13.5px/1 Manrope', color: 'rgba(255,255,255,.42)' }}>Discard</span>
+          <span style={{ font: '700 13.5px/1 Manrope', color: 'rgba(255,255,255,.42)' }}>{isEditing ? 'Cancel' : 'Discard'}</span>
         </div>
       </div>
     </div>

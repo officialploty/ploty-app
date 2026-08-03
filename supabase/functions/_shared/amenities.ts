@@ -36,6 +36,24 @@ export async function attachAmenities(
   return null;
 }
 
+// Used on edit — replaces the full amenity set for a listing instead of
+// only ever adding, so removed amenities actually disappear.
+export async function syncAmenities(
+  supabase: any,
+  ownerType: "plot" | "layout",
+  ownerId: string,
+  names: string[],
+) {
+  const { error: delErr } = await supabase
+    .from("listing_amenities")
+    .delete()
+    .eq("owner_type", ownerType)
+    .eq("owner_id", ownerId);
+  if (delErr) return delErr.message;
+  if (!names.length) return null;
+  return attachAmenities(supabase, ownerType, ownerId, names);
+}
+
 export function titleCase(s: string) {
   return s.replace(/\w\S*/g, (w) => w[0].toUpperCase() + w.slice(1).toLowerCase());
 }

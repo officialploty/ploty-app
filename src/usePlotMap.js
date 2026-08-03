@@ -137,6 +137,7 @@ export function usePlotMap() {
   const [auth, setAuthState] = useState(null);
   const [authPrompt, setAuthPrompt] = useState(null);
   const [publishing, setPublishing] = useState(false);
+  const [editingId, setEditingId] = useState(null);
 
   const flash = useCallback((msg) => {
     setToast(msg);
@@ -154,14 +155,21 @@ export function usePlotMap() {
   // here without any extra client-side logic.
   const loadListings = useCallback(async () => {
     setPlotsLoading(true);
-    const [{ data: plotRows, error: plotErr }, { data: layoutRows, error: layoutErr }, { data: mediaRows, error: mediaErr }] = await Promise.all([
+    const [
+      { data: plotRows, error: plotErr },
+      { data: layoutRows, error: layoutErr },
+      { data: mediaRows, error: mediaErr },
+      { data: amenityRows, error: amenityErr },
+    ] = await Promise.all([
       supabase.from('plots').select('*'),
       supabase.from('layouts').select('*'),
       supabase.from('media').select('*').order('position', { ascending: true }),
+      supabase.from('listing_amenities').select('owner_type, owner_id, amenities(name)'),
     ]);
     if (plotErr) console.error('failed to load plots:', plotErr.message);
     if (layoutErr) console.error('failed to load layouts:', layoutErr.message);
     if (mediaErr) console.error('failed to load media:', mediaErr.message);
+    if (amenityErr) console.error('failed to load amenities:', amenityErr.message);
 
     const mediaByOwner = new Map();
     for (const row of mediaRows || []) {
@@ -172,8 +180,20 @@ export function usePlotMap() {
       mediaByOwner.set(key, list);
     }
 
-    const plots_ = (plotRows || []).map((r) => ({ ...mapDbPlot(r), media: mediaByOwner.get('plot:' + r.id) || [] }));
-    const layouts_ = (layoutRows || []).map((r) => ({ ...mapDbLayout(r), media: mediaByOwner.get('layout:' + r.id) || [] }));
+    const amenitiesByOwner = new Map();
+    for (const row of amenityRows || []) {
+      const key = row.owner_type + ':' + row.owner_id;
+      const list = amenitiesByOwner.get(key) || [];
+      if (row.amenities?.name) list.push(row.amenities.name);
+      amenitiesByOwner.set(key, list);
+    }
+
+    const plots_ = (plotRows || []).map((r) => ({
+      ...mapDbPlot(r), media: mediaByOwner.get('plot:' + r.id) || [], amenities: amenitiesByOwner.get('plot:' + r.id) || [],
+    }));
+    const layouts_ = (layoutRows || []).map((r) => ({
+      ...mapDbLayout(r), media: mediaByOwner.get('layout:' + r.id) || [], amenities: amenitiesByOwner.get('layout:' + r.id) || [],
+    }));
     setPlots([...plots_, ...layouts_]);
     setPlotsLoading(false);
   }, []);
@@ -240,6 +260,7 @@ export function usePlotMap() {
     setSelected(null);
     setPin(null);
     setFormState(emptyForm);
+    setEditingId(null);
     setFocus(false);
     setCityMenu(false);
     setAreaMenu(false);
@@ -248,6 +269,36 @@ export function usePlotMap() {
   const cancelAdd = useCallback(() => {
     setMode('browse');
     setPin(null);
+    setEditingId(null);
+    setTab('map');
+  }, []);
+
+  // Jumps straight to the details step (step 3), pre-filled from an
+  // existing listing the signed-in user owns — skips the placing/kind
+  // steps since the pin and kind are already known.
+  const startEdit = useCallback((listing) => {
+    setSelected(null);
+    setPin([listing.lat, listing.lng]);
+    setEditingId(listing.id);
+    setFormState({
+      ...emptyForm,
+      kind: listing.kind,
+      locality: listing.locality,
+      area: listing.area,
+      priceMode: 'ppsf',
+      price: listing.kind === 'layout' ? String(listing.ppsf) : String(listing.ppsf),
+      size: listing.kind === 'layout' ? '' : String(listing.sqft),
+      notes: listing.notes || '',
+      contact: listing.contact === 'Not shared' ? '' : listing.contact,
+      amenities: listing.amenities.slice(),
+      plots: listing.kind === 'layout' ? String(listing.plots) : '',
+      sizeMin: listing.kind === 'layout' ? String(listing.sizeMin) : '',
+      sizeMax: listing.kind === 'layout' ? String(listing.sizeMax) : '',
+      ppsfMin: listing.kind === 'layout' ? String(listing.ppsf) : '',
+      ppsfMax: listing.kind === 'layout' ? String(listing.ppsfMax) : '',
+      company: listing.kind === 'layout' ? listing.owner : '',
+    });
+    setMode('form');
     setTab('map');
   }, []);
 
@@ -290,55 +341,80 @@ export function usePlotMap() {
     if (publishing) return;
     setPublishing(true);
     const areaFor = form.area;
+    const editId = editingId;
     if (form.kind === 'layout') {
       const lo = num(form.ppsfMin), hi = Math.max(num(form.ppsfMax) || lo, lo);
       const smin = num(form.sizeMin), smax = Math.max(num(form.sizeMax) || smin, smin);
+      const payload = {
+        locality: form.locality.trim(), city, area: areaFor,
+        lat: pin[0], lng: pin[1], landmark: 'Pinned by you',
+        plot_count: num(form.plots), size_min: smin, size_max: smax,
+        ppsf_min: lo, ppsf_max: hi,
+        notes: form.notes.trim() || undefined,
+        owner: form.company.trim(),
+        contact: form.contact.trim() || undefined,
+        amenities: form.amenities.slice(),
+      };
       try {
-        const { layout } = await callEdgeFunction('submit-layout', {
-          locality: form.locality.trim(), city, area: areaFor,
-          lat: pin[0], lng: pin[1], landmark: 'Pinned by you',
-          plot_count: num(form.plots), size_min: smin, size_max: smax,
-          ppsf_min: lo, ppsf_max: hi,
-          notes: form.notes.trim() || undefined,
-          owner: form.company.trim(),
-          contact: form.contact.trim() || undefined,
-          amenities: form.amenities.slice(),
-        });
-        const media = form.media.length ? await uploadMedia('layout', layout.id, form.media, auth?.id) : [];
-        setPlots((prev) => [{ ...mapDbLayout(layout), media }, ...prev]);
-        setMode('browse'); setPin(null); setSelected(null); setTab('map');
-        setArea('All areas'); setPriceFilter('all'); setKindFilter('all');
-        setFormState(emptyForm);
-        flash('Layout submitted for review — you’ll be notified once it’s approved');
+        if (editId) {
+          const { layout, sent_back_to_review } = await callEdgeFunction('update-layout', { id: editId, ...payload });
+          const media = form.media.length ? await uploadMedia('layout', editId, form.media, auth?.id, plots.find((p) => p.id === editId)?.media.length || 0) : [];
+          setPlots((prev) => prev.map((p) => (p.id === editId ? { ...mapDbLayout(layout), amenities: form.amenities.slice(), media: [...p.media, ...media] } : p)));
+          setEditingId(null);
+          setMode('browse'); setPin(null); setSelected(editId); setTab('map');
+          setArea('All areas'); setPriceFilter('all'); setKindFilter('all');
+          setFormState(emptyForm);
+          flash(sent_back_to_review ? 'Changes saved — sent back for re-review since it was already approved' : 'Changes saved');
+        } else {
+          const { layout } = await callEdgeFunction('submit-layout', payload);
+          const media = form.media.length ? await uploadMedia('layout', layout.id, form.media, auth?.id) : [];
+          setPlots((prev) => [{ ...mapDbLayout(layout), amenities: form.amenities.slice(), media }, ...prev]);
+          setMode('browse'); setPin(null); setSelected(null); setTab('map');
+          setArea('All areas'); setPriceFilter('all'); setKindFilter('all');
+          setFormState(emptyForm);
+          flash('Layout submitted for review — you’ll be notified once it’s approved');
+        }
       } catch (err) {
-        flash('Could not submit layout: ' + err.message);
+        flash(editId ? 'Could not save changes: ' + err.message : 'Could not submit layout: ' + err.message);
       } finally {
         setPublishing(false);
       }
       return;
     }
+    const payload = {
+      locality: form.locality.trim(), city, area: areaFor,
+      lat: pin[0], lng: pin[1], landmark: 'Pinned by you',
+      sqft: size, ppsf: Math.round(derivedPpsf),
+      notes: form.notes.trim() || undefined,
+      owner: auth?.name,
+      contact: form.contact.trim() || undefined,
+      amenities: form.amenities.slice(),
+    };
     try {
-      const { plot, nearby_warning } = await callEdgeFunction('submit-plot', {
-        locality: form.locality.trim(), city, area: areaFor,
-        lat: pin[0], lng: pin[1], landmark: 'Pinned by you',
-        sqft: size, ppsf: Math.round(derivedPpsf),
-        notes: form.notes.trim() || undefined,
-        owner: auth?.name,
-        contact: form.contact.trim() || undefined,
-        amenities: form.amenities.slice(),
-      });
-      const media = form.media.length ? await uploadMedia('plot', plot.id, form.media, auth?.id) : [];
-      setPlots((prev) => [{ ...mapDbPlot(plot), media }, ...prev]);
-      setMode('browse'); setPin(null); setSelected(plot.id); setTab('map');
-      setArea('All areas'); setPriceFilter('all'); setKindFilter('all');
-      setFormState(emptyForm);
-      flash(nearby_warning?.length ? 'Plot published — heads up, a similar pin exists nearby' : 'Plot published — live for everyone');
+      if (editId) {
+        const { plot } = await callEdgeFunction('update-plot', { id: editId, ...payload });
+        const media = form.media.length ? await uploadMedia('plot', editId, form.media, auth?.id, plots.find((p) => p.id === editId)?.media.length || 0) : [];
+        setPlots((prev) => prev.map((p) => (p.id === editId ? { ...mapDbPlot(plot), amenities: form.amenities.slice(), media: [...p.media, ...media] } : p)));
+        setEditingId(null);
+        setMode('browse'); setPin(null); setSelected(editId); setTab('map');
+        setArea('All areas'); setPriceFilter('all'); setKindFilter('all');
+        setFormState(emptyForm);
+        flash('Changes saved');
+      } else {
+        const { plot, nearby_warning } = await callEdgeFunction('submit-plot', payload);
+        const media = form.media.length ? await uploadMedia('plot', plot.id, form.media, auth?.id) : [];
+        setPlots((prev) => [{ ...mapDbPlot(plot), amenities: form.amenities.slice(), media }, ...prev]);
+        setMode('browse'); setPin(null); setSelected(plot.id); setTab('map');
+        setArea('All areas'); setPriceFilter('all'); setKindFilter('all');
+        setFormState(emptyForm);
+        flash(nearby_warning?.length ? 'Plot published — heads up, a similar pin exists nearby' : 'Plot published — live for everyone');
+      }
     } catch (err) {
-      flash('Could not publish plot: ' + err.message);
+      flash(editId ? 'Could not save changes: ' + err.message : 'Could not publish plot: ' + err.message);
     } finally {
       setPublishing(false);
     }
-  }, [canPublish, publishing, form, area, city, pin, derivedPpsf, size, flash, auth]);
+  }, [canPublish, publishing, form, area, city, pin, derivedPpsf, size, flash, auth, editingId, plots]);
 
   const pendingLayouts = useMemo(
     () => plots.filter((p) => p.kind === 'layout' && p.status === 'pending'),
@@ -466,6 +542,7 @@ export function usePlotMap() {
     plots, plotsLoading, visible, sel, tab, city, area, query, focus, cityMenu, areaMenu, sort, priceFilter, kindFilter,
     mode, pin, form, saved, toast, placing, choosingKind, formOpen, detailOpen,
     derivedPpsf, derivedTotal, fb, canPublish, publishing, nearbyDuplicates, pendingLayouts, myListings, addMediaToListing,
+    editingId, startEdit,
     auth, authPrompt, openAuthPrompt, cancelAuthPrompt, loginWithGoogle, logout,
     setTab, setQuery, setFocus, setCityMenu, setAreaMenu, setSort, setPriceFilter, setKindFilter,
     setForm, setPin,

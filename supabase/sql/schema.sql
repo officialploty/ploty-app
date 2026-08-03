@@ -176,6 +176,11 @@ create policy "staff can update layout status"
     where profiles.id = auth.uid() and profiles.role = 'staff'
   ));
 
+create policy "owners can update their own layouts"
+  on public.layouts for update
+  to authenticated
+  using (auth.uid() = submitted_by);
+
 
 -- ============================================================
 -- MEDIA — photos/videos, shared across plots and layouts
