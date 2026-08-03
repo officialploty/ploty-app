@@ -34,7 +34,7 @@ export default function ProfilePanel({ pm }) {
         </div>
         <div style={{ minWidth: 0 }}>
           <div style={{ font: '700 17px/1.2 Manrope', color: '#fff' }}>{auth.name}</div>
-          <div style={{ font: '500 12px/1.4 Manrope', color: 'rgba(255,255,255,.45)' }}>{auth.phone}</div>
+          <div style={{ font: '500 12px/1.4 Manrope', color: 'rgba(255,255,255,.45)' }}>{auth.email}</div>
         </div>
       </div>
 
@@ -58,7 +58,6 @@ export default function ProfilePanel({ pm }) {
         <span style={{ font: '700 13.5px/1 Manrope', color: 'rgba(255,255,255,.65)' }}>Sign out</span>
       </div>
 
-      <div style={{ font: '400 11.5px/1.5 Manrope', color: 'rgba(255,255,255,.3)' }}>Ploty is a prototype — sign-in details are stored only on this device.</div>
     </div>
   );
 }

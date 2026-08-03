@@ -1,6 +1,19 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CITIES } from './data';
 import { band, distanceMeters, NEARBY_THRESHOLD_M, num, shot } from './utils';
+import { supabase } from './supabaseClient';
+
+const PENDING_AUTH_REASON_KEY = 'ploty_pending_auth_reason';
+
+function toAuthShape(user) {
+  if (!user) return null;
+  return {
+    id: user.id,
+    name: user.user_metadata?.full_name || user.user_metadata?.name || user.email || 'You',
+    email: user.email,
+    avatarUrl: user.user_metadata?.avatar_url || null,
+  };
+}
 
 const emptyForm = {
   kind: 'plot', locality: '', priceMode: 'ppsf', price: '', size: '', notes: '', contact: '', media: [], amenities: [],
@@ -40,14 +53,7 @@ export function usePlotMap(seedPlots) {
   }, []);
   const [toast, setToast] = useState('');
   const toastTimer = useRef(null);
-  const [auth, setAuthState] = useState(() => {
-    try {
-      const raw = localStorage.getItem('plotmap_auth');
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [auth, setAuthState] = useState(null);
   const [authPrompt, setAuthPrompt] = useState(null);
 
   const flash = useCallback((msg) => {
@@ -215,6 +221,22 @@ export function usePlotMap(seedPlots) {
   const openAuthPrompt = useCallback((reason) => setAuthPrompt({ reason }), []);
   const cancelAuthPrompt = useCallback(() => setAuthPrompt(null), []);
 
+  // Google sign-in is a full-page redirect, so any in-memory "resume this
+  // action after login" state would be lost — persist the reason first,
+  // then pick it back up once the session lands (see the effect below).
+  const loginWithGoogle = useCallback(() => {
+    const reason = authPrompt?.reason;
+    if (reason) sessionStorage.setItem(PENDING_AUTH_REASON_KEY, reason);
+    supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin },
+    });
+  }, [authPrompt]);
+
+  const logout = useCallback(() => {
+    supabase.auth.signOut();
+  }, []);
+
   const startAdd = useCallback(() => {
     if (!auth) { openAuthPrompt('register'); return; }
     doStartAdd();
@@ -238,21 +260,30 @@ export function usePlotMap(seedPlots) {
     doContact();
   }, [sel, auth, doContact, openAuthPrompt]);
 
-  const login = useCallback((name, phone) => {
-    const u = { name: name.trim(), phone: phone.trim() };
-    setAuthState(u);
-    try { localStorage.setItem('plotmap_auth', JSON.stringify(u)); } catch { /* ignore */ }
-    setAuthPrompt((current) => {
-      if (current?.reason === 'call') doContact();
-      else if (current?.reason === 'register') doStartAdd();
-      return null;
+  // Tracks the real Supabase session — populated on mount and kept in sync
+  // as sign-in/sign-out happen (including the redirect back from Google).
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setAuthState(toAuthShape(session?.user ?? null));
     });
-  }, [doContact, doStartAdd]);
 
-  const logout = useCallback(() => {
-    setAuthState(null);
-    try { localStorage.removeItem('plotmap_auth'); } catch { /* ignore */ }
-  }, []);
+    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+      const user = session?.user ?? null;
+      setAuthState(toAuthShape(user));
+
+      if (user) {
+        const reason = sessionStorage.getItem(PENDING_AUTH_REASON_KEY);
+        if (reason) {
+          sessionStorage.removeItem(PENDING_AUTH_REASON_KEY);
+          setAuthPrompt(null);
+          if (reason === 'call') doContact();
+          else if (reason === 'register') doStartAdd();
+        }
+      }
+    });
+
+    return () => subscription.subscription.unsubscribe();
+  }, [doContact, doStartAdd]);
 
   const closeDetail = useCallback(() => setSelected(null), []);
 
@@ -270,7 +301,7 @@ export function usePlotMap(seedPlots) {
     plots, visible, sel, tab, city, area, query, focus, cityMenu, areaMenu, sort, priceFilter, kindFilter,
     mode, pin, form, saved, toast, placing, choosingKind, formOpen, detailOpen,
     derivedPpsf, derivedTotal, fb, canPublish, nearbyDuplicates, pendingLayouts,
-    auth, authPrompt, openAuthPrompt, cancelAuthPrompt, login, logout,
+    auth, authPrompt, openAuthPrompt, cancelAuthPrompt, loginWithGoogle, logout,
     setTab, setQuery, setFocus, setCityMenu, setAreaMenu, setSort, setPriceFilter, setKindFilter,
     setForm, setPin,
     open, goCity, goArea, startAdd, cancelAdd, backToPlacing, backToKind, chooseKind, confirmLocation, publish,
