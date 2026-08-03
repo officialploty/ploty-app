@@ -15,13 +15,67 @@ function toAuthShape(user) {
   };
 }
 
+function daysSince(iso) {
+  if (!iso) return 0;
+  return Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86400000));
+}
+
+// Maps a real `plots`/`layouts` row from Supabase into the shape the UI
+// already expects (unchanged from the prototype's mock data shape).
+// amenities/media are left empty here — those need their own fetch against
+// listing_amenities/media (no FK-based auto-join is possible since those
+// tables use a polymorphic owner_type+owner_id, not a real foreign key).
+function mapDbPlot(row) {
+  return {
+    id: row.id, kind: 'plot', locality: row.locality, city: row.city, area: row.area,
+    lat: row.lat, lng: row.lng, sqft: row.sqft, ppsf: row.ppsf,
+    notes: row.notes || 'No additional notes provided by the lister.',
+    owner: row.owner || 'Unknown', landmark: row.landmark || 'Pinned by lister',
+    contact: row.contact || 'Not shared', days: daysSince(row.created_at),
+    amenities: [], media: [],
+  };
+}
+
+function mapDbLayout(row) {
+  return {
+    id: row.id, kind: 'layout', locality: row.locality, city: row.city, area: row.area,
+    lat: row.lat, lng: row.lng, plots: row.plot_count, sizeMin: row.size_min, sizeMax: row.size_max,
+    ppsf: row.ppsf_min, ppsfMax: row.ppsf_max,
+    notes: row.notes || 'No additional notes provided by the developer.',
+    owner: row.owner || 'Developer', landmark: row.landmark || 'Pinned by developer',
+    approval: row.approval_number || 'Not stated', contact: row.contact || 'Not shared',
+    days: daysSince(row.created_at), amenities: [], media: [],
+    status: row.status, submittedBy: row.submitted_by,
+  };
+}
+
+const EDGE_BASE = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
+
+async function callEdgeFunction(name, body) {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('not signed in');
+  const res = await fetch(`${EDGE_BASE}/${name}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${session.access_token}`,
+    },
+    body: JSON.stringify(body),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error || 'request failed');
+  return json;
+}
+
 const emptyForm = {
   kind: 'plot', locality: '', priceMode: 'ppsf', price: '', size: '', notes: '', contact: '', media: [], amenities: [],
   plots: '', sizeMin: '', sizeMax: '', ppsfMin: '', ppsfMax: '', company: '',
 };
 
-export function usePlotMap(seedPlots) {
-  const [plots, setPlots] = useState(seedPlots);
+export function usePlotMap() {
+  const [plots, setPlots] = useState([]);
+  const [plotsLoading, setPlotsLoading] = useState(true);
   const [tab, setTab] = useState('map');
   const [city, setCity] = useState('Chennai');
   const [area, setArea] = useState('All areas');
@@ -65,6 +119,26 @@ export function usePlotMap(seedPlots) {
   const setForm = useCallback((k, v) => {
     setFormState((f) => ({ ...f, [k]: v }));
   }, []);
+
+  // Real data from Supabase, replacing the prototype's mock seed. RLS does
+  // the filtering for us — a non-staff fetch of `layouts` only ever returns
+  // status='approved' rows, so pending layouts naturally stay invisible
+  // here without any extra client-side logic.
+  const loadListings = useCallback(async () => {
+    setPlotsLoading(true);
+    const [{ data: plotRows, error: plotErr }, { data: layoutRows, error: layoutErr }] = await Promise.all([
+      supabase.from('plots').select('*'),
+      supabase.from('layouts').select('*'),
+    ]);
+    if (plotErr) console.error('failed to load plots:', plotErr.message);
+    if (layoutErr) console.error('failed to load layouts:', layoutErr.message);
+    setPlots([...(plotRows || []).map(mapDbPlot), ...(layoutRows || []).map(mapDbLayout)]);
+    setPlotsLoading(false);
+  }, []);
+
+  useEffect(() => {
+    loadListings();
+  }, [loadListings]);
 
   const isLive = (p) => p.kind !== 'layout' || !p.status || p.status === 'approved';
 
@@ -166,7 +240,9 @@ export function usePlotMap(seedPlots) {
     ? num(form.plots) > 0 && num(form.ppsfMin) > 0 && num(form.sizeMin) > 0 && !!form.company.trim()
     : derivedPpsf > 0 && size > 0);
 
-  const publish = useCallback(() => {
+  // media upload isn't wired yet (needs Supabase Storage — sprint plan Day 15),
+  // so form.media is deliberately not sent to either Edge Function below.
+  const publish = useCallback(async () => {
     if (!canPublish) {
       flash(form.kind === 'layout' ? 'Company name, plot count, sizes and price are required' : 'Locality, price and size are required');
       return;
@@ -175,32 +251,45 @@ export function usePlotMap(seedPlots) {
     if (form.kind === 'layout') {
       const lo = num(form.ppsfMin), hi = Math.max(num(form.ppsfMax) || lo, lo);
       const smin = num(form.sizeMin), smax = Math.max(num(form.sizeMax) || smin, smin);
-      const L2 = {
-        id: 'u' + Date.now(), kind: 'layout', locality: form.locality.trim(), city, area: areaFor,
-        lat: pin[0], lng: pin[1], plots: num(form.plots), sizeMin: smin, sizeMax: smax,
-        ppsf: lo, ppsfMax: hi, notes: form.notes.trim() || 'No additional notes provided by the developer.',
-        owner: form.company.trim(), days: 1, landmark: 'Pinned by you', approval: 'Not stated',
-        contact: form.contact.trim() || 'Not shared', media: form.media.slice(), amenities: form.amenities.slice(),
-        status: 'pending', submittedBy: (auth && auth.name) || 'You',
-      };
-      setPlots((prev) => [L2, ...prev]);
-      setMode('browse'); setPin(null); setSelected(null); setTab('map');
-      setArea('All areas'); setPriceFilter('all'); setKindFilter('all');
-      setFormState(emptyForm);
-      flash('Layout submitted for review — you’ll be notified once it’s approved');
+      try {
+        const { layout } = await callEdgeFunction('submit-layout', {
+          locality: form.locality.trim(), city, area: areaFor,
+          lat: pin[0], lng: pin[1], landmark: 'Pinned by you',
+          plot_count: num(form.plots), size_min: smin, size_max: smax,
+          ppsf_min: lo, ppsf_max: hi,
+          notes: form.notes.trim() || undefined,
+          owner: form.company.trim(),
+          contact: form.contact.trim() || undefined,
+          amenities: form.amenities.slice(),
+        });
+        setPlots((prev) => [mapDbLayout(layout), ...prev]);
+        setMode('browse'); setPin(null); setSelected(null); setTab('map');
+        setArea('All areas'); setPriceFilter('all'); setKindFilter('all');
+        setFormState(emptyForm);
+        flash('Layout submitted for review — you’ll be notified once it’s approved');
+      } catch (err) {
+        flash('Could not submit layout: ' + err.message);
+      }
       return;
     }
-    const p = {
-      id: 'u' + Date.now(), locality: form.locality.trim(), city, area: areaFor, kind: 'plot',
-      lat: pin[0], lng: pin[1], sqft: size, ppsf: Math.round(derivedPpsf),
-      notes: form.notes.trim() || 'No additional notes provided by the lister.', media: form.media.slice(), amenities: form.amenities.slice(),
-      owner: (auth && auth.name) || 'You', days: 1, landmark: 'Pinned by you', contact: form.contact.trim() || 'Not shared',
-    };
-    setPlots((prev) => [p, ...prev]);
-    setMode('browse'); setPin(null); setSelected(p.id); setTab('map');
-    setArea('All areas'); setPriceFilter('all'); setKindFilter('all');
-    setFormState(emptyForm);
-    flash('Plot published — live for everyone');
+    try {
+      const { plot, nearby_warning } = await callEdgeFunction('submit-plot', {
+        locality: form.locality.trim(), city, area: areaFor,
+        lat: pin[0], lng: pin[1], landmark: 'Pinned by you',
+        sqft: size, ppsf: Math.round(derivedPpsf),
+        notes: form.notes.trim() || undefined,
+        owner: auth?.name,
+        contact: form.contact.trim() || undefined,
+        amenities: form.amenities.slice(),
+      });
+      setPlots((prev) => [mapDbPlot(plot), ...prev]);
+      setMode('browse'); setPin(null); setSelected(plot.id); setTab('map');
+      setArea('All areas'); setPriceFilter('all'); setKindFilter('all');
+      setFormState(emptyForm);
+      flash(nearby_warning?.length ? 'Plot published — heads up, a similar pin exists nearby' : 'Plot published — live for everyone');
+    } catch (err) {
+      flash('Could not publish plot: ' + err.message);
+    }
   }, [canPublish, form, area, city, pin, derivedPpsf, size, flash, auth]);
 
   const pendingLayouts = useMemo(
@@ -208,6 +297,9 @@ export function usePlotMap(seedPlots) {
     [plots],
   );
 
+  // NOT yet wired to the real approve-layout/reject-layout Edge Functions —
+  // local-only for now (sprint plan Day 13–14). Changes here don't persist
+  // and will be overwritten on next loadListings() refresh.
   const approveLayout = useCallback((id) => {
     setPlots((prev) => prev.map((p) => (p.id === id ? { ...p, status: 'approved' } : p)));
     flash('Layout approved — now live for everyone');
@@ -298,7 +390,7 @@ export function usePlotMap(seedPlots) {
   }, [form.media, flash, setForm]);
 
   return {
-    plots, visible, sel, tab, city, area, query, focus, cityMenu, areaMenu, sort, priceFilter, kindFilter,
+    plots, plotsLoading, visible, sel, tab, city, area, query, focus, cityMenu, areaMenu, sort, priceFilter, kindFilter,
     mode, pin, form, saved, toast, placing, choosingKind, formOpen, detailOpen,
     derivedPpsf, derivedTotal, fb, canPublish, nearbyDuplicates, pendingLayouts,
     auth, authPrompt, openAuthPrompt, cancelAuthPrompt, loginWithGoogle, logout,
