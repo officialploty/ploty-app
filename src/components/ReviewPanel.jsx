@@ -51,7 +51,7 @@ function ReviewCard({ p, pm }) {
         </div>
         <div
           onClick={() => pm.approveLayout(p.id)}
-          style={{ flex: 1.4, height: 44, borderRadius: 14, background: 'linear-gradient(110deg,#35e0c0,#8b7bff)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+          style={{ flex: 1.4, height: 44, borderRadius: 14, background: 'linear-gradient(110deg,#3ecf6e,#2fae59)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
         >
           <span style={{ font: '800 13px/1 Manrope', color: '#0d1018' }}>Approve &amp; publish</span>
         </div>
