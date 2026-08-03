@@ -193,8 +193,8 @@ export default function AddForm({ pm, onBackToPlacing }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 2 }}>
         <div onClick={canPublish && !publishing ? publish : undefined} style={{
-          height: 58, borderRadius: 20, background: canPublish && !publishing ? 'linear-gradient(110deg,#8b7bff,#35e0c0)' : 'rgba(255,255,255,.08)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: canPublish && !publishing ? 'pointer' : 'default', boxShadow: '0 18px 36px -16px rgba(139,123,255,.7)',
+          height: 58, borderRadius: 20, background: canPublish && !publishing ? 'linear-gradient(110deg,#3ecf6e,#2fae59)' : 'rgba(255,255,255,.08)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: canPublish && !publishing ? 'pointer' : 'default', boxShadow: '0 18px 36px -16px rgba(46,174,89,.7)',
         }}>
           <span style={{ font: '800 16px/1 Manrope', color: canPublish && !publishing ? '#0d1018' : 'rgba(255,255,255,.35)', letterSpacing: '-.01em' }}>{publishing ? 'Publishing…' : canPublish ? (f.kind === 'layout' ? 'Publish layout' : 'Publish plot') : 'Fill the required fields'}</span>
         </div>
