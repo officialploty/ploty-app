@@ -4,6 +4,17 @@
 create extension if not exists pgcrypto;
 -- postgis already enabled via dashboard
 
+-- keeps `updated_at` accurate on every row update, without every writer
+-- (Edge Functions, direct table updates, dashboard edits) needing to
+-- remember to set it themselves
+create function public.set_updated_at()
+returns trigger as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$ language plpgsql;
+
 -- ============================================================
 -- PROFILES — extends auth.users with app-specific fields
 -- ============================================================
@@ -95,11 +106,16 @@ create table public.plots (
   ppsf numeric not null,
   amenity_count integer,
   submitted_by uuid references public.profiles(id),
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
 
 create index plots_location_idx on public.plots using gist (location);
 create index plots_city_area_idx on public.plots (city, area);
+
+create trigger set_plots_updated_at
+  before update on public.plots
+  for each row execute function public.set_updated_at();
 
 alter table public.plots enable row level security;
 
@@ -143,11 +159,16 @@ create table public.layouts (
   amenity_count integer,
   status text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
   submitted_by uuid references public.profiles(id),
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
 
 create index layouts_location_idx on public.layouts using gist (location);
 create index layouts_status_idx on public.layouts (status);
+
+create trigger set_layouts_updated_at
+  before update on public.layouts
+  for each row execute function public.set_updated_at();
 
 alter table public.layouts enable row level security;
 

@@ -33,7 +33,7 @@ function mapDbPlot(row) {
     notes: row.notes || 'No additional notes provided by the lister.',
     owner: row.owner || 'Unknown', landmark: row.landmark || 'Pinned by lister',
     contact: row.contact || 'Not shared', days: daysSince(row.created_at),
-    amenities: [], media: [], submittedBy: row.submitted_by,
+    amenities: [], media: [], submittedBy: row.submitted_by, updatedAt: row.updated_at,
   };
 }
 
@@ -46,7 +46,7 @@ function mapDbLayout(row) {
     owner: row.owner || 'Developer', landmark: row.landmark || 'Pinned by developer',
     approval: row.approval_number || 'Not stated', contact: row.contact || 'Not shared',
     days: daysSince(row.created_at), amenities: [], media: [],
-    status: row.status, submittedBy: row.submitted_by,
+    status: row.status, submittedBy: row.submitted_by, updatedAt: row.updated_at,
   };
 }
 

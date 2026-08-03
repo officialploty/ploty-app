@@ -8,7 +8,7 @@ export function listCardFields(p) {
     metaLine: p.kind === 'layout'
       ? p.area.toUpperCase() + ' · LAYOUT · ' + p.plots + ' PLOTS'
       : p.area.toUpperCase() + ' · ' + p.media.length + (p.media.length === 1 ? ' FILE' : ' FILES'),
-    thumbBg: p.media.length ? (p.media[0].url ? 'url("' + p.media[0].url + '") center/cover, ' + p.media[0].bg : p.media[0].bg) : 'rgba(255,255,255,.05)',
+    thumbBg: p.media.length ? (p.media[0].url ? 'url("' + p.media[0].url + '") center/cover' + (p.media[0].bg ? ', ' + p.media[0].bg : '') : p.media[0].bg) : 'rgba(255,255,255,.05)',
     mediaBadge: p.media.length ? String(p.media.length) : '0',
     notesShort: p.notes.length > 110 ? p.notes.slice(0, 110) + '…' : p.notes,
     sizeLabel: (p.kind === 'layout' ? sqftRange(p.sizeMin, p.sizeMax) : Math.round(p.sqft).toLocaleString('en-IN')) + ' SQFT',
@@ -44,7 +44,7 @@ export function detailFields(sel) {
     size: Math.round(sel.sqft || 0).toLocaleString('en-IN') + ' sqft',
     total: inr((sel.sqft || 0) * sel.ppsf),
     media: sel.media.map((m, i) => ({
-      bg: m.url ? 'url("' + m.url + '") center/cover, ' + m.bg : m.bg,
+      bg: m.url ? 'url("' + m.url + '") center/cover' + (m.bg ? ', ' + m.bg : '') : m.bg,
       isVideo: m.type === 'video',
       label: m.type === 'video' ? 'VIDEO' : 'PHOTO ' + (i + 1),
     })),
