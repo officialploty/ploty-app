@@ -22,9 +22,10 @@ function daysSince(iso) {
 
 // Maps a real `plots`/`layouts` row from Supabase into the shape the UI
 // already expects (unchanged from the prototype's mock data shape).
-// amenities/media are left empty here — those need their own fetch against
-// listing_amenities/media (no FK-based auto-join is possible since those
-// tables use a polymorphic owner_type+owner_id, not a real foreign key).
+// `media` is attached separately by the caller (loadListings/publish) since
+// it needs its own fetch — no FK-based auto-join is possible here (media
+// uses a polymorphic owner_type+owner_id, not a real foreign key).
+// `amenities` is still left empty — same limitation, not yet wired.
 function mapDbPlot(row) {
   return {
     id: row.id, kind: 'plot', locality: row.locality, city: row.city, area: row.area,
@@ -66,6 +67,31 @@ async function callEdgeFunction(name, body) {
   const json = await res.json();
   if (!res.ok) throw new Error(json.error || 'request failed');
   return json;
+}
+
+const MEDIA_BUCKET = 'listing-media';
+
+// Uploads each file in `mediaItems` to Storage under the signed-in user's own
+// folder, then attaches it to the given plot/layout via the `media` table.
+// RLS on `media` requires the row to already exist and be owned by the
+// caller, so this must run after the plot/layout has been created.
+async function uploadMedia(ownerType, ownerId, mediaItems, userId) {
+  const results = [];
+  for (let i = 0; i < mediaItems.length; i += 1) {
+    const item = mediaItems[i];
+    if (!item.file) continue;
+    const ext = item.file.name.split('.').pop() || (item.type === 'video' ? 'mp4' : 'jpg');
+    const path = `${userId}/${ownerType}/${ownerId}/${i}.${ext}`;
+    const { error: uploadErr } = await supabase.storage.from(MEDIA_BUCKET).upload(path, item.file, { upsert: true });
+    if (uploadErr) { console.error('media upload failed:', uploadErr.message); continue; }
+    const { error: rowErr } = await supabase.from('media').insert({
+      owner_type: ownerType, owner_id: ownerId, storage_path: path, type: item.type, position: i,
+    });
+    if (rowErr) { console.error('media row insert failed:', rowErr.message); continue; }
+    const { data: { publicUrl } } = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path);
+    results.push({ url: publicUrl, type: item.type });
+  }
+  return results;
 }
 
 const emptyForm = {
@@ -127,13 +153,27 @@ export function usePlotMap() {
   // here without any extra client-side logic.
   const loadListings = useCallback(async () => {
     setPlotsLoading(true);
-    const [{ data: plotRows, error: plotErr }, { data: layoutRows, error: layoutErr }] = await Promise.all([
+    const [{ data: plotRows, error: plotErr }, { data: layoutRows, error: layoutErr }, { data: mediaRows, error: mediaErr }] = await Promise.all([
       supabase.from('plots').select('*'),
       supabase.from('layouts').select('*'),
+      supabase.from('media').select('*').order('position', { ascending: true }),
     ]);
     if (plotErr) console.error('failed to load plots:', plotErr.message);
     if (layoutErr) console.error('failed to load layouts:', layoutErr.message);
-    setPlots([...(plotRows || []).map(mapDbPlot), ...(layoutRows || []).map(mapDbLayout)]);
+    if (mediaErr) console.error('failed to load media:', mediaErr.message);
+
+    const mediaByOwner = new Map();
+    for (const row of mediaRows || []) {
+      const key = row.owner_type + ':' + row.owner_id;
+      const { data: { publicUrl } } = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(row.storage_path);
+      const list = mediaByOwner.get(key) || [];
+      list.push({ url: publicUrl, type: row.type });
+      mediaByOwner.set(key, list);
+    }
+
+    const plots_ = (plotRows || []).map((r) => ({ ...mapDbPlot(r), media: mediaByOwner.get('plot:' + r.id) || [] }));
+    const layouts_ = (layoutRows || []).map((r) => ({ ...mapDbLayout(r), media: mediaByOwner.get('layout:' + r.id) || [] }));
+    setPlots([...plots_, ...layouts_]);
     setPlotsLoading(false);
   }, []);
 
@@ -241,8 +281,6 @@ export function usePlotMap() {
     ? num(form.plots) > 0 && num(form.ppsfMin) > 0 && num(form.sizeMin) > 0 && !!form.company.trim()
     : derivedPpsf > 0 && size > 0);
 
-  // media upload isn't wired yet (needs Supabase Storage — sprint plan Day 15),
-  // so form.media is deliberately not sent to either Edge Function below.
   const publish = useCallback(async () => {
     if (!canPublish) {
       flash(form.kind === 'layout' ? 'Company name, plot count, sizes and price are required' : 'Locality, price and size are required');
@@ -265,7 +303,8 @@ export function usePlotMap() {
           contact: form.contact.trim() || undefined,
           amenities: form.amenities.slice(),
         });
-        setPlots((prev) => [mapDbLayout(layout), ...prev]);
+        const media = form.media.length ? await uploadMedia('layout', layout.id, form.media, auth?.id) : [];
+        setPlots((prev) => [{ ...mapDbLayout(layout), media }, ...prev]);
         setMode('browse'); setPin(null); setSelected(null); setTab('map');
         setArea('All areas'); setPriceFilter('all'); setKindFilter('all');
         setFormState(emptyForm);
@@ -287,7 +326,8 @@ export function usePlotMap() {
         contact: form.contact.trim() || undefined,
         amenities: form.amenities.slice(),
       });
-      setPlots((prev) => [mapDbPlot(plot), ...prev]);
+      const media = form.media.length ? await uploadMedia('plot', plot.id, form.media, auth?.id) : [];
+      setPlots((prev) => [{ ...mapDbPlot(plot), media }, ...prev]);
       setMode('browse'); setPin(null); setSelected(plot.id); setTab('map');
       setArea('All areas'); setPriceFilter('all'); setKindFilter('all');
       setFormState(emptyForm);
@@ -395,6 +435,7 @@ export function usePlotMap() {
 
   const onFiles = useCallback((files) => {
     const add = files.slice(0, Math.max(0, 8 - form.media.length)).map((file, k) => ({
+      file,
       url: URL.createObjectURL(file),
       bg: shot(form.media.length + k),
       type: file.type.indexOf('video') === 0 ? 'video' : 'photo',
