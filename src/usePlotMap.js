@@ -33,7 +33,7 @@ function mapDbPlot(row) {
     notes: row.notes || 'No additional notes provided by the lister.',
     owner: row.owner || 'Unknown', landmark: row.landmark || 'Pinned by lister',
     contact: row.contact || 'Not shared', days: daysSince(row.created_at),
-    amenities: [], media: [],
+    amenities: [], media: [], submittedBy: row.submitted_by,
   };
 }
 
@@ -75,17 +75,18 @@ const MEDIA_BUCKET = 'listing-media';
 // folder, then attaches it to the given plot/layout via the `media` table.
 // RLS on `media` requires the row to already exist and be owned by the
 // caller, so this must run after the plot/layout has been created.
-async function uploadMedia(ownerType, ownerId, mediaItems, userId) {
+async function uploadMedia(ownerType, ownerId, mediaItems, userId, startIndex = 0) {
   const results = [];
   for (let i = 0; i < mediaItems.length; i += 1) {
     const item = mediaItems[i];
     if (!item.file) continue;
+    const position = startIndex + i;
     const ext = item.file.name.split('.').pop() || (item.type === 'video' ? 'mp4' : 'jpg');
-    const path = `${userId}/${ownerType}/${ownerId}/${i}.${ext}`;
+    const path = `${userId}/${ownerType}/${ownerId}/${position}.${ext}`;
     const { error: uploadErr } = await supabase.storage.from(MEDIA_BUCKET).upload(path, item.file, { upsert: true });
     if (uploadErr) { console.error('media upload failed:', uploadErr.message); continue; }
     const { error: rowErr } = await supabase.from('media').insert({
-      owner_type: ownerType, owner_id: ownerId, storage_path: path, type: item.type, position: i,
+      owner_type: ownerType, owner_id: ownerId, storage_path: path, type: item.type, position,
     });
     if (rowErr) { console.error('media row insert failed:', rowErr.message); continue; }
     const { data: { publicUrl } } = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path);
@@ -344,6 +345,23 @@ export function usePlotMap() {
     [plots],
   );
 
+  const myListings = useMemo(
+    () => (auth ? plots.filter((p) => p.submittedBy === auth.id) : []),
+    [plots, auth],
+  );
+
+  const addMediaToListing = useCallback(async (listing, files) => {
+    if (!auth || !files.length) return;
+    const items = files.slice(0, Math.max(0, 8 - listing.media.length)).map((file) => ({
+      file, type: file.type.indexOf('video') === 0 ? 'video' : 'photo',
+    }));
+    if (!items.length) { flash('Up to 8 files per listing'); return; }
+    const uploaded = await uploadMedia(listing.kind, listing.id, items, auth.id, listing.media.length);
+    if (!uploaded.length) { flash('Could not upload photos'); return; }
+    setPlots((prev) => prev.map((p) => (p.id === listing.id ? { ...p, media: [...p.media, ...uploaded] } : p)));
+    flash(uploaded.length + (uploaded.length === 1 ? ' photo added' : ' photos added'));
+  }, [auth, flash]);
+
   const approveLayout = useCallback(async (id) => {
     try {
       await callEdgeFunction('approve-layout', { layout_id: id });
@@ -447,7 +465,7 @@ export function usePlotMap() {
   return {
     plots, plotsLoading, visible, sel, tab, city, area, query, focus, cityMenu, areaMenu, sort, priceFilter, kindFilter,
     mode, pin, form, saved, toast, placing, choosingKind, formOpen, detailOpen,
-    derivedPpsf, derivedTotal, fb, canPublish, publishing, nearbyDuplicates, pendingLayouts,
+    derivedPpsf, derivedTotal, fb, canPublish, publishing, nearbyDuplicates, pendingLayouts, myListings, addMediaToListing,
     auth, authPrompt, openAuthPrompt, cancelAuthPrompt, loginWithGoogle, logout,
     setTab, setQuery, setFocus, setCityMenu, setAreaMenu, setSort, setPriceFilter, setKindFilter,
     setForm, setPin,

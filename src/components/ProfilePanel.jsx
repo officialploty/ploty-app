@@ -1,5 +1,5 @@
 export default function ProfilePanel({ pm }) {
-  const { auth, saved, logout, openAuthPrompt, pendingLayouts, setTab } = pm;
+  const { auth, saved, logout, openAuthPrompt, pendingLayouts, myListings, addMediaToListing, setTab } = pm;
 
   if (!auth) {
     return (
@@ -51,6 +51,15 @@ export default function ProfilePanel({ pm }) {
         <span style={{ padding: '4px 9px', borderRadius: 99, background: pendingLayouts.length ? 'rgba(245,180,60,.2)' : 'rgba(255,255,255,.08)', font: '800 12px/1 Manrope', color: pendingLayouts.length ? '#f5b43c' : 'rgba(255,255,255,.4)' }}>{pendingLayouts.length}</span>
       </div>
 
+      {myListings.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <span style={{ font: '700 11px/1 Manrope', color: 'rgba(255,255,255,.45)', letterSpacing: '.12em' }}>MY LISTINGS</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {myListings.map((l) => <MyListingRow key={l.id} listing={l} onAddMedia={(files) => addMediaToListing(l, files)} />)}
+          </div>
+        </div>
+      )}
+
       <div
         onClick={logout}
         style={{ height: 48, borderRadius: 16, background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
@@ -58,6 +67,28 @@ export default function ProfilePanel({ pm }) {
         <span style={{ font: '700 13.5px/1 Manrope', color: 'rgba(255,255,255,.65)' }}>Sign out</span>
       </div>
 
+    </div>
+  );
+}
+
+function MyListingRow({ listing, onAddMedia }) {
+  const statusLabel = listing.kind === 'layout' ? (listing.status || 'approved') : 'live';
+  const statusColor = statusLabel === 'pending' ? '#f5b43c' : statusLabel === 'rejected' ? '#ff9b9b' : '#8ef0dd';
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 16, background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.09)' }}>
+      <div style={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <span style={{ font: '700 13.5px/1.2 Manrope', color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{listing.locality}</span>
+        <span style={{ font: '600 11px/1 Manrope', color: 'rgba(255,255,255,.4)', letterSpacing: '.04em' }}>
+          {listing.area?.toUpperCase()} · {listing.media.length} PHOTO{listing.media.length === 1 ? '' : 'S'} · <span style={{ color: statusColor }}>{statusLabel.toUpperCase()}</span>
+        </span>
+      </div>
+      <label style={{ flex: 'none', height: 36, padding: '0 14px', borderRadius: 12, background: 'rgba(53,224,192,.12)', border: '1px solid rgba(53,224,192,.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+        <span style={{ font: '700 11.5px/1 Manrope', color: '#35e0c0' }}>Add photos</span>
+        <input
+          type="file" multiple accept="image/*,video/*" style={{ display: 'none' }}
+          onChange={(e) => { onAddMedia(Array.from(e.target.files || [])); e.target.value = ''; }}
+        />
+      </label>
     </div>
   );
 }
