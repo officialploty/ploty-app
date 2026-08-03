@@ -297,17 +297,24 @@ export function usePlotMap() {
     [plots],
   );
 
-  // NOT yet wired to the real approve-layout/reject-layout Edge Functions —
-  // local-only for now (sprint plan Day 13–14). Changes here don't persist
-  // and will be overwritten on next loadListings() refresh.
-  const approveLayout = useCallback((id) => {
-    setPlots((prev) => prev.map((p) => (p.id === id ? { ...p, status: 'approved' } : p)));
-    flash('Layout approved — now live for everyone');
+  const approveLayout = useCallback(async (id) => {
+    try {
+      await callEdgeFunction('approve-layout', { layout_id: id });
+      setPlots((prev) => prev.map((p) => (p.id === id ? { ...p, status: 'approved' } : p)));
+      flash('Layout approved — now live for everyone');
+    } catch (err) {
+      flash('Could not approve layout: ' + err.message);
+    }
   }, [flash]);
 
-  const rejectLayout = useCallback((id) => {
-    setPlots((prev) => prev.map((p) => (p.id === id ? { ...p, status: 'rejected' } : p)));
-    flash('Layout rejected');
+  const rejectLayout = useCallback(async (id) => {
+    try {
+      await callEdgeFunction('reject-layout', { layout_id: id });
+      setPlots((prev) => prev.map((p) => (p.id === id ? { ...p, status: 'rejected' } : p)));
+      flash('Layout rejected');
+    } catch (err) {
+      flash('Could not reject layout: ' + err.message);
+    }
   }, [flash]);
 
   const openAuthPrompt = useCallback((reason) => setAuthPrompt({ reason }), []);
