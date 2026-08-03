@@ -30,8 +30,12 @@ create policy "profiles are self-updatable"
 create function public.handle_new_user()
 returns trigger as $$
 begin
-  insert into public.profiles (id, phone)
-  values (new.id, new.phone);
+  insert into public.profiles (id, name, phone)
+  values (
+    new.id,
+    coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name'),
+    new.phone
+  );
   return new;
 end;
 $$ language plpgsql security definer;
