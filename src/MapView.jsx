@@ -14,9 +14,9 @@ function markerHtml(p, sel) {
     ? '<div style="display:flex;align-items:center;gap:7px;padding:6px 10px;border-radius:13px;background:rgba(13,16,24,.92);border:1.5px solid ' + b.color + ';box-shadow:0 6px 18px rgba(0,0,0,.6)' + (sel ? ';outline:2.5px solid #fff' : '') + '">'
       + '<span style="font:800 11.5px/1 Manrope;color:' + b.color + '">' + p.plots + '</span>'
       + '<span style="font:700 9.5px/1 Manrope;color:rgba(255,255,255,.72);letter-spacing:.06em">PLOTS</span>'
-      + '<span style="font:800 10.5px/1 Manrope;color:#fff">' + kShort(p.ppsf) + '–' + kShort(p.ppsfMax) + '</span></div>'
+      + '<span style="font:800 10.5px/1 Manrope;color:#fff">' + kShort(p.ppsf) + '</span></div>'
     : '<div style="position:relative;padding:5px 9px;border-radius:99px;background:' + b.color + ';color:#0d1018;font:800 11px/1 Manrope;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.55)' + (sel ? ';outline:2.5px solid #fff' : '') + '">' + ppsfLabel(p.ppsf) + '</div>';
-  const w = isL ? 152 : 62, h = isL ? 28 : 24;
+  const w = isL ? 120 : 62, h = isL ? 28 : 24;
   return {
     w, h,
     html: '<div style="position:relative;width:' + w + 'px;height:' + h + 'px;display:flex;align-items:center;justify-content:center;transform:scale(' + (sel ? 1.18 : 1) + ');transition:transform .18s">' + pulse + inner + '</div>',

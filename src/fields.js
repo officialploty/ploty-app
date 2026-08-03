@@ -1,19 +1,23 @@
 import { band, inr, kShort, ppsfLabel, sqftRange } from './utils';
 
 export function listCardFields(p) {
+  const isLayout = p.kind === 'layout';
   return {
+    id: p.id,
     locality: p.locality,
+    cityLine: p.area.toUpperCase() + ', ' + p.city.toUpperCase(),
     color: band(p.ppsf).color,
-    ppsfLabel: p.kind === 'layout' ? kShort(p.ppsf) + '–' + kShort(p.ppsfMax) : ppsfLabel(p.ppsf),
-    metaLine: p.kind === 'layout'
-      ? p.area.toUpperCase() + ' · LAYOUT · ' + p.plots + ' PLOTS'
-      : p.area.toUpperCase() + ' · ' + p.media.length + (p.media.length === 1 ? ' FILE' : ' FILES'),
-    thumbBg: p.media.length ? (p.media[0].url ? 'url("' + p.media[0].url + '") center/cover' + (p.media[0].bg ? ', ' + p.media[0].bg : '') : p.media[0].bg) : 'rgba(255,255,255,.05)',
-    mediaBadge: p.media.length ? String(p.media.length) : '0',
-    notesShort: p.notes.length > 110 ? p.notes.slice(0, 110) + '…' : p.notes,
-    sizeLabel: (p.kind === 'layout' ? sqftRange(p.sizeMin, p.sizeMax) : Math.round(p.sqft).toLocaleString('en-IN')) + ' SQFT',
-    totalLabel: p.kind === 'layout' ? p.owner : inr(p.sqft * p.ppsf),
-    age: p.days === 1 ? 'yesterday' : p.days + 'd ago',
+    ppsfPrefix: isLayout ? 'From' : null,
+    ppsfLabel: ppsfLabel(p.ppsf),
+    isLayout,
+    thumbBg: p.media.length ? (p.media[0].url ? 'url("' + p.media[0].url + '") center/cover' + (p.media[0].bg ? ', ' + p.media[0].bg : '') : p.media[0].bg) : null,
+    mediaBadge: p.media.length ? String(p.media.length) : null,
+    amenitiesCount: p.amenities.length,
+    plotSizeLabel: (isLayout ? sqftRange(p.sizeMin, p.sizeMax) : Math.round(p.sqft).toLocaleString('en-IN')) + ' sqft',
+    totalPricePrefix: isLayout ? 'From' : null,
+    totalPriceLabel: isLayout ? inr(p.sizeMin * p.ppsf) : inr(p.sqft * p.ppsf),
+    plotsCountLabel: isLayout ? String(p.plots) : '1',
+    age: p.days === 1 ? 'Listed yesterday' : 'Listed ' + p.days + ' days ago',
   };
 }
 

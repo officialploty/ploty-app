@@ -5,16 +5,16 @@ import { priceChip } from './Filters';
 const sortLabels = { new: 'Newest', low: 'Price ↑', high: 'Price ↓' };
 
 export default function ListPanel({ pm }) {
-  const { visible, city, area, sort, setSort, kindFilter, setKindFilter, priceFilter, setPriceFilter, setArea, open } = pm;
+  const { visible, city, area, sort, setSort, kindFilter, setKindFilter, priceFilter, setPriceFilter, setArea, open, saved, toggleSave, shareListing } = pm;
 
   const filterChips = [
     { ...priceChip('All listings', 'all', kindFilter), onClick: () => setKindFilter('all') },
     { ...priceChip('Individual plots', 'plot', kindFilter), onClick: () => setKindFilter('plot') },
     { ...priceChip('Developer layouts', 'layout', kindFilter), onClick: () => setKindFilter('layout') },
     { ...priceChip('All prices', 'all', priceFilter), onClick: () => setPriceFilter('all') },
-    { ...priceChip('Under ₹1,500', 'value', priceFilter), onClick: () => setPriceFilter('value') },
-    { ...priceChip('₹1,500–3,000', 'mid', priceFilter), onClick: () => setPriceFilter('mid') },
-    { ...priceChip('₹3,000+', 'premium', priceFilter), onClick: () => setPriceFilter('premium') },
+    { ...priceChip('Under ₹4,000', 'value', priceFilter), onClick: () => setPriceFilter('value') },
+    { ...priceChip('₹4,000–8,000', 'mid', priceFilter), onClick: () => setPriceFilter('mid') },
+    { ...priceChip('₹8,000+', 'premium', priceFilter), onClick: () => setPriceFilter('premium') },
   ].concat(CITIES[city].areas.slice(1).map((a) => ({
     ...priceChip(a, a, area), onClick: () => setArea(area === a ? 'All areas' : a),
   })));
@@ -38,7 +38,9 @@ export default function ListPanel({ pm }) {
         </div>
       </div>
       <div className="pmScroll" style={{ flex: 1, overflowY: 'auto', padding: '14px 18px 30px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {visible.map((p) => <PlotCard key={p.id} p={p} onClick={() => open(p.id)} />)}
+        {visible.map((p) => (
+          <PlotCard key={p.id} p={p} onClick={() => open(p.id)} saved={saved} onToggleSave={toggleSave} onShare={shareListing} />
+        ))}
         {visible.length === 0 && (
           <div style={{ padding: '40px 10px', textAlign: 'center', font: '500 13px/1.6 Manrope', color: 'rgba(255,255,255,.4)' }}>Nothing here yet. Widen the filters, or be the first to register a plot in this area.</div>
         )}

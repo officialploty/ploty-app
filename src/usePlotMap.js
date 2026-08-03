@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CITIES } from './data';
-import { band, distanceMeters, NEARBY_THRESHOLD_M, num, shot } from './utils';
+import { band, distanceMeters, NEARBY_THRESHOLD_M, num, ppsfLabel, shot } from './utils';
 import { supabase } from './supabaseClient';
 
 const PENDING_AUTH_REASON_KEY = 'ploty_pending_auth_reason';
@@ -209,7 +209,7 @@ export function usePlotMap() {
     if (kindFilter !== 'all') list = list.filter((p) => p.kind === kindFilter);
     if (area !== 'All areas') list = list.filter((p) => p.area === area);
     if (priceFilter !== 'all') {
-      const b = { value: [0, 1500], mid: [1500, 3000], premium: [3000, Infinity] }[priceFilter];
+      const b = { value: [0, 4000], mid: [4000, 8000], premium: [8000, Infinity] }[priceFilter];
       list = list.filter((p) => p.ppsf >= b[0] && p.ppsf < b[1]);
     }
     const q = query.trim().toLowerCase();
@@ -482,12 +482,28 @@ export function usePlotMap() {
     doStartAdd();
   }, [auth, doStartAdd, openAuthPrompt]);
 
-  const toggleSave = useCallback(() => {
-    if (!sel) return;
-    const on = saved.includes(sel.id);
-    setSaved((s) => (on ? s.filter((x) => x !== sel.id) : s.concat(sel.id)));
+  const toggleSave = useCallback((id) => {
+    const targetId = id ?? sel?.id;
+    if (!targetId) return;
+    const on = saved.includes(targetId);
+    setSaved((s) => (on ? s.filter((x) => x !== targetId) : s.concat(targetId)));
     flash(on ? 'Removed from saved' : 'Saved to your shortlist');
   }, [sel, saved, flash, setSaved]);
+
+  const shareListing = useCallback(async (p) => {
+    const text = p.locality + ' — ' + (p.kind === 'layout' ? 'from ' : '') + ppsfLabel(p.ppsf) + ' /sqft on Ploty';
+    const url = window.location.origin;
+    if (navigator.share) {
+      try { await navigator.share({ title: p.locality, text, url }); } catch { /* user cancelled */ }
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(text + ' — ' + url);
+      flash('Link copied');
+    } catch {
+      flash('Could not share');
+    }
+  }, [flash]);
 
   const doContact = useCallback(() => {
     if (!sel) return;
@@ -548,6 +564,6 @@ export function usePlotMap() {
     setForm, setPin,
     open, goCity, goArea, startAdd, cancelAdd, backToPlacing, backToKind, chooseKind, confirmLocation, publish,
     approveLayout, rejectLayout,
-    toggleSave, contact, closeDetail, onFiles, flash,
+    toggleSave, shareListing, contact, closeDetail, onFiles, flash,
   };
 }

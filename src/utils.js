@@ -1,6 +1,6 @@
 export const BANDS = [
-  { max: 1500, color: '#35e0c0', label: 'VALUE BAND', bg: 'rgba(53,224,192,.16)' },
-  { max: 3000, color: '#f5b43c', label: 'MID BAND', bg: 'rgba(245,180,60,.16)' },
+  { max: 4000, color: '#35e0c0', label: 'VALUE BAND', bg: 'rgba(53,224,192,.16)' },
+  { max: 8000, color: '#f5b43c', label: 'MID BAND', bg: 'rgba(245,180,60,.16)' },
   { max: Infinity, color: '#ff6b6b', label: 'PREMIUM BAND', bg: 'rgba(255,107,107,.16)' },
 ];
 export const band = (v) => BANDS.find((b) => v < b.max);
