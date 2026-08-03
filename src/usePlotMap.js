@@ -125,7 +125,10 @@ export function usePlotMap() {
       return [];
     }
   });
-  const setSaved = useCallback((updater) => {
+  // Local-only for guests (no account needed to save plots). Once signed
+  // in, favorites live in the real `favorites` table instead — see
+  // loadFavorites()/toggleSave() below — so this path is guest-only.
+  const setSavedLocal = useCallback((updater) => {
     setSavedState((prev) => {
       const next = typeof updater === 'function' ? updater(prev) : updater;
       try { localStorage.setItem('ploty_saved', JSON.stringify(next)); } catch { /* ignore */ }
@@ -482,13 +485,33 @@ export function usePlotMap() {
     doStartAdd();
   }, [auth, doStartAdd, openAuthPrompt]);
 
-  const toggleSave = useCallback((id) => {
+  const toggleSave = useCallback(async (id) => {
     const targetId = id ?? sel?.id;
     if (!targetId) return;
     const on = saved.includes(targetId);
-    setSaved((s) => (on ? s.filter((x) => x !== targetId) : s.concat(targetId)));
-    flash(on ? 'Removed from saved' : 'Saved to your shortlist');
-  }, [sel, saved, flash, setSaved]);
+
+    if (!auth) {
+      setSavedLocal((s) => (on ? s.filter((x) => x !== targetId) : s.concat(targetId)));
+      flash(on ? 'Removed from saved' : 'Saved to your shortlist');
+      return;
+    }
+
+    const listing = plots.find((p) => p.id === targetId);
+    if (!listing) return;
+    setSavedState((s) => (on ? s.filter((x) => x !== targetId) : s.concat(targetId)));
+    if (on) {
+      const { error } = await supabase.from('favorites').delete()
+        .eq('user_id', auth.id).eq('listing_type', listing.kind).eq('listing_id', targetId);
+      if (error) { setSavedState((s) => s.concat(targetId)); flash('Could not remove favorite'); return; }
+      flash('Removed from saved');
+    } else {
+      const { error } = await supabase.from('favorites').insert({
+        user_id: auth.id, listing_type: listing.kind, listing_id: targetId,
+      });
+      if (error) { setSavedState((s) => s.filter((x) => x !== targetId)); flash('Could not save'); return; }
+      flash('Saved to your shortlist');
+    }
+  }, [sel, saved, flash, auth, plots, setSavedLocal]);
 
   const shareListing = useCallback(async (p) => {
     const text = p.locality + ' — ' + (p.kind === 'layout' ? 'from ' : '') + ppsfLabel(p.ppsf) + ' /sqft on Ploty';
@@ -515,6 +538,25 @@ export function usePlotMap() {
     if (!auth) { openAuthPrompt('call'); return; }
     doContact();
   }, [sel, auth, doContact, openAuthPrompt]);
+
+  // Favorites live in localStorage for guests, but switch to the real
+  // `favorites` table once signed in — load them on sign-in, and fall
+  // back to whatever's in localStorage again on sign-out.
+  useEffect(() => {
+    if (!auth) {
+      try {
+        const raw = localStorage.getItem('ploty_saved');
+        setSavedState(raw ? JSON.parse(raw) : []);
+      } catch {
+        setSavedState([]);
+      }
+      return;
+    }
+    supabase.from('favorites').select('listing_id').eq('user_id', auth.id).then(({ data, error }) => {
+      if (error) { console.error('failed to load favorites:', error.message); return; }
+      setSavedState((data || []).map((r) => r.listing_id));
+    });
+  }, [auth]);
 
   // Tracks the real Supabase session — populated on mount and kept in sync
   // as sign-in/sign-out happen (including the redirect back from Google).
