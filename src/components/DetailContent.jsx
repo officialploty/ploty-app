@@ -3,6 +3,10 @@ import { detailFields } from '../fields';
 import MiniMap from '../MiniMap';
 import MediaLightbox from './MediaLightbox';
 
+const GREEN = '#35e0c0';
+const PURPLE = '#8b7bff';
+const BLUE = '#35c8e0';
+
 export default function DetailContent({ sel, saved, onToggleSave, onContact }) {
   const d = detailFields(sel);
   const [lightboxIndex, setLightboxIndex] = useState(null);
@@ -11,6 +15,13 @@ export default function DetailContent({ sel, saved, onToggleSave, onContact }) {
 
   return (
     <div style={{ padding: '6px 20px 42px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ padding: '7px 12px', borderRadius: 10, background: d.bandBg, display: 'flex', alignItems: 'center', gap: 6 }}>
+          {d.bandLabel === 'PREMIUM BAND' && <CrownIcon color={d.color} />}
+          <span style={{ font: '800 10px/1 Manrope', color: d.color, letterSpacing: '.1em' }}>{d.bandLabel}</span>
+        </div>
+      </div>
+
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 7, minWidth: 0 }}>
           {d.isPlot && (
@@ -26,77 +37,63 @@ export default function DetailContent({ sel, saved, onToggleSave, onContact }) {
             </div>
           )}
           <div style={{ font: '700 19px/1.2 Manrope', color: '#fff', letterSpacing: '-.02em' }}>{d.locality}</div>
-          <div style={{ font: '500 12px/1 Manrope', color: 'rgba(255,255,255,.42)', letterSpacing: '.04em' }}>{d.cityLine}</div>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8, flex: 'none' }}>
-          <div style={{ padding: '7px 11px', borderRadius: 10, background: d.bandBg, font: '800 10px/1 Manrope', color: d.color, letterSpacing: '.1em' }}>{d.bandLabel}</div>
-          <div onClick={onToggleSave} style={{
-            width: 36, height: 36, borderRadius: 99,
-            background: isSaved ? 'rgba(255,107,107,.2)' : 'rgba(255,255,255,.07)',
-            border: '1px solid ' + (isSaved ? 'rgba(255,107,107,.5)' : 'rgba(255,255,255,.13)'),
-            display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-          }}>
-            <span style={{ font: '700 15px/1 Manrope', color: isSaved ? '#ff6b6b' : 'rgba(255,255,255,.5)' }}>♥</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, font: '500 12px/1 Manrope', color: 'rgba(255,255,255,.42)', letterSpacing: '.04em' }}>
+            <PinIcon />{d.cityLine}
           </div>
+        </div>
+        <div onClick={onToggleSave} style={{
+          width: 40, height: 40, borderRadius: 99, flex: 'none',
+          background: isSaved ? 'rgba(255,107,107,.2)' : 'rgba(255,255,255,.07)',
+          border: '1px solid ' + (isSaved ? 'rgba(255,107,107,.5)' : 'rgba(255,255,255,.13)'),
+          display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+        }}>
+          <HeartIcon filled={isSaved} />
         </div>
       </div>
 
-      <div className="pmScroll" style={{ display: 'flex', gap: 9, overflowX: 'auto', paddingBottom: 2 }}>
-        {d.media.map((m, i) => (
-          <div
-            key={i}
-            onClick={() => setLightboxIndex(i)}
-            style={{
-              flex: 'none', width: 150, height: 104, borderRadius: 16, overflow: 'hidden', position: 'relative',
-              background: m.bg, backgroundSize: 'cover', backgroundPosition: 'center', border: '1px solid rgba(255,255,255,.1)',
-              cursor: 'pointer',
-            }}
-          >
-            {m.isVideo && (
-              <div style={{
-                position: 'absolute', left: '50%', top: '50%', margin: '-17px 0 0 -17px', width: 34, height: 34,
-                borderRadius: 99, background: 'rgba(10,11,18,.6)', border: '1px solid rgba(255,255,255,.4)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                <div style={{ width: 0, height: 0, borderTop: '7px solid transparent', borderBottom: '7px solid transparent', borderLeft: '11px solid #fff', marginLeft: 3 }} />
-              </div>
-            )}
-            <div style={{ position: 'absolute', left: 8, bottom: 8, padding: '4px 7px', borderRadius: 7, background: 'rgba(10,11,18,.66)', font: '700 9px/1 Manrope', color: '#fff', letterSpacing: '.1em' }}>{m.label}</div>
+      {d.media.length > 0 && (
+        <div onClick={() => setLightboxIndex(0)} style={{
+          position: 'relative', width: '100%', height: 190, borderRadius: 18, overflow: 'hidden', cursor: 'pointer',
+          background: d.media[0].bg, backgroundSize: 'cover', backgroundPosition: 'center', border: '1px solid rgba(255,255,255,.1)',
+        }}>
+          <div style={{ position: 'absolute', left: 12, bottom: 12, display: 'flex', alignItems: 'center', gap: 6, padding: '6px 11px', borderRadius: 10, background: 'rgba(10,11,18,.72)' }}>
+            <GalleryIcon />
+            <span style={{ font: '700 11px/1 Manrope', color: '#fff', letterSpacing: '.04em' }}>{d.media.length} PHOTO{d.media.length === 1 ? '' : 'S'}</span>
           </div>
-        ))}
-        {d.noMedia && (
-          <div style={{ flex: 1, height: 88, borderRadius: 16, border: '1px dashed rgba(255,255,255,.16)', display: 'flex', alignItems: 'center', justifyContent: 'center', font: '600 11.5px/1 Manrope', color: 'rgba(255,255,255,.35)' }}>No photos uploaded for this plot</div>
-        )}
-      </div>
-
-      {d.isLayout && (
-        <>
-          <div style={{ display: 'flex', gap: 9 }}>
-            <StatBox label="PLOTS" value={d.plotCount} flex={1} />
-            <StatBox label="PLOT SIZES" value={d.sizeRange} flex={1.35} />
-            <StatBox label="MEDIA" value={d.mediaCount} flex={1} />
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '13px 15px', borderRadius: 16, background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.09)' }}>
-            <span style={{ font: '600 9.5px/1 Manrope', color: 'rgba(255,255,255,.4)', letterSpacing: '.12em' }}>APPROVAL</span>
-            <span style={{ font: '700 12px/1 Manrope', color: '#fff' }}>{d.approval}</span>
-          </div>
-        </>
+        </div>
+      )}
+      {d.noMedia && (
+        <div style={{ height: 100, borderRadius: 18, border: '1px dashed rgba(255,255,255,.16)', display: 'flex', alignItems: 'center', justifyContent: 'center', font: '600 11.5px/1 Manrope', color: 'rgba(255,255,255,.35)' }}>No photos uploaded for this plot</div>
       )}
 
-      {d.isPlot && (
-        <div style={{ display: 'flex', gap: 9 }}>
-          <StatBox label="PLOT SIZE" value={d.size} flex={1} />
-          <StatBox label="TOTAL" value={d.total} flex={1} />
-          <StatBox label="MEDIA" value={d.mediaCount} flex={1} />
+      {d.isLayout ? (
+        <div style={{ display: 'flex', borderRadius: 16, background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.09)', overflow: 'hidden' }}>
+          <StatCell icon={<PlotsIcon color={BLUE} />} color={BLUE} label="PLOTS" value={d.plotCount} />
+          <StatCell icon={<SqftIcon color={PURPLE} />} color={PURPLE} label="PLOT SIZES" value={d.sizeRange} border />
+          <StatCell icon={<GalleryIconSmall color={GREEN} />} color={GREEN} label="MEDIA" value={d.mediaCount} border />
+        </div>
+      ) : (
+        <div style={{ display: 'flex', borderRadius: 16, background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.09)', overflow: 'hidden' }}>
+          <StatCell icon={<SqftIcon color={GREEN} />} color={GREEN} label="PLOT SIZE" value={d.size} />
+          <StatCell icon={<RupeeIcon color={PURPLE} />} color={PURPLE} label="TOTAL PRICE" value={d.total} border />
+          <StatCell icon={<GalleryIconSmall color={BLUE} />} color={BLUE} label="MEDIA" value={d.mediaCount} border />
+        </div>
+      )}
+
+      {d.isLayout && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '13px 15px', borderRadius: 16, background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.09)' }}>
+          <span style={{ font: '600 9.5px/1 Manrope', color: 'rgba(255,255,255,.4)', letterSpacing: '.12em' }}>APPROVAL</span>
+          <span style={{ font: '700 12px/1 Manrope', color: '#fff' }}>{d.approval}</span>
         </div>
       )}
 
       {d.amenities.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-          <div style={{ font: '700 11px/1 Manrope', color: 'rgba(255,255,255,.45)', letterSpacing: '.12em' }}>AMENITIES</div>
+          <div style={{ font: '700 11px/1 Manrope', color: 'rgba(255,255,255,.45)', letterSpacing: '.12em' }}>AMENITIES ({d.amenities.length})</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {d.amenities.map((a) => (
-              <div key={a} style={{ padding: '7px 12px', borderRadius: 10, background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.1)', font: '600 11.5px/1 Manrope', color: 'rgba(255,255,255,.72)' }}>
+              <div key={a} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 13px', borderRadius: 99, background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.1)', font: '600 11.5px/1 Manrope', color: 'rgba(255,255,255,.75)' }}>
+                <AmenityIcon name={a} />
                 {a}
               </div>
             ))}
@@ -104,18 +101,27 @@ export default function DetailContent({ sel, saved, onToggleSave, onContact }) {
         </div>
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-        <div style={{ font: '700 11px/1 Manrope', color: 'rgba(255,255,255,.45)', letterSpacing: '.12em' }}>NOTES</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 9, padding: '13px 15px', borderRadius: 16, background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.08)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <NotesIcon />
+          <span style={{ font: '700 10.5px/1 Manrope', color: 'rgba(255,255,255,.45)', letterSpacing: '.1em' }}>NOTES</span>
+        </div>
         <div style={{ font: '400 13.5px/1.6 Manrope', color: 'rgba(255,255,255,.72)' }}>{d.notes}</div>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 15px', borderRadius: 16, background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.09)' }}>
         <MiniMap lat={sel.lat} lng={sel.lng} ppsf={sel.ppsf} style={{ width: 74, height: 74, borderRadius: 12, overflow: 'hidden', flex: 'none' }} />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0, flex: 1 }}>
           <span style={{ font: '600 10px/1 Manrope', color: 'rgba(255,255,255,.4)', letterSpacing: '.12em' }}>EXACT LOCATION</span>
           <span style={{ font: '600 12px/1.4 ui-monospace,Menlo,monospace', color: 'rgba(255,255,255,.75)' }}>{d.coords}</span>
-          <span style={{ font: '500 11.5px/1 Manrope', color: '#8b7bff' }}>{d.landmark}</span>
+          <span style={{ font: '500 11.5px/1 Manrope', color: '#35e0c0' }}>{d.landmark}</span>
         </div>
+        <a
+          href={'https://www.google.com/maps?q=' + sel.lat + ',' + sel.lng} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}
+          style={{ width: 34, height: 34, borderRadius: 10, background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}
+        >
+          <LinkIcon />
+        </a>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 14, background: d.trustBg, border: '1px solid ' + d.trustBorder }}>
@@ -134,8 +140,9 @@ export default function DetailContent({ sel, saved, onToggleSave, onContact }) {
         <div style={{ display: 'flex', gap: 9 }}>
           <div onClick={onContact} style={{
             flex: 1, height: 54, borderRadius: 18, background: 'linear-gradient(110deg,#35e0c0,#8b7bff)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 16px 32px -14px rgba(53,224,192,.6)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', boxShadow: '0 16px 32px -14px rgba(53,224,192,.6)',
           }}>
+            <ChatIcon />
             <span style={{ font: '800 15px/1 Manrope', color: '#0d1018', letterSpacing: '-.01em' }}>{d.contactLabel}</span>
           </div>
           <div onClick={onContact} style={{
@@ -154,11 +161,170 @@ export default function DetailContent({ sel, saved, onToggleSave, onContact }) {
   );
 }
 
-function StatBox({ label, value, flex }) {
+function StatCell({ icon, color, label, value, border }) {
   return (
-    <div style={{ flex, padding: 14, borderRadius: 16, background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.09)', display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <span style={{ font: '600 9.5px/1 Manrope', color: 'rgba(255,255,255,.4)', letterSpacing: '.12em' }}>{label}</span>
-      <span style={{ font: '700 13.5px/1 Manrope', color: '#fff', whiteSpace: 'nowrap' }}>{value}</span>
+    <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '13px 8px', borderLeft: border ? '1px solid rgba(255,255,255,.08)' : 'none' }}>
+      <div style={{ width: 32, height: 32, borderRadius: 10, background: hexToRgba(color, .16), flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {icon}
+      </div>
+      <span style={{ font: '600 8.5px/1 Manrope', color: 'rgba(255,255,255,.4)', letterSpacing: '.05em', textAlign: 'center' }}>{label}</span>
+      <span style={{ font: '800 13.5px/1.2 Manrope', color: '#fff', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>{value}</span>
     </div>
+  );
+}
+
+function hexToRgba(hex, a) {
+  const n = parseInt(hex.slice(1), 16);
+  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+const AMENITY_ICONS = {
+  'water connection': () => <DropIcon />,
+  'eb connection': () => <BoltIcon />,
+  'drainage': () => <DrainIcon />,
+  'tar road': () => <RoadIcon />,
+  'sewage line': () => <DrainIcon />,
+};
+
+function AmenityIcon({ name }) {
+  const Icon = AMENITY_ICONS[name.toLowerCase()];
+  return Icon ? <Icon /> : <TagIcon />;
+}
+
+function CrownIcon({ color }) {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+      <path d="M3 8l4 3 5-6 5 6 4-3-1.5 10h-15L3 8Z" stroke={color} strokeWidth="1.8" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function PinIcon() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+      <path d="M12 22s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12Z" stroke={GREEN} strokeWidth="1.8" />
+      <circle cx="12" cy="10" r="2.4" stroke={GREEN} strokeWidth="1.8" />
+    </svg>
+  );
+}
+
+function SqftIcon({ color }) {
+  return <div style={{ width: 13, height: 13, border: '1.6px dashed ' + color, borderRadius: 3 }} />;
+}
+
+function RupeeIcon({ color }) {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+      <path d="M6 4h12M6 9h12M6 4c4 0 7 1.8 7 5s-3 5-7 5l8 6" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function PlotsIcon({ color }) {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+      <rect x="3" y="3" width="8" height="8" rx="1.3" stroke={color} strokeWidth="1.8" />
+      <rect x="13" y="3" width="8" height="8" rx="1.3" stroke={color} strokeWidth="1.8" />
+      <rect x="3" y="13" width="8" height="8" rx="1.3" stroke={color} strokeWidth="1.8" />
+      <rect x="13" y="13" width="8" height="8" rx="1.3" stroke={color} strokeWidth="1.8" />
+    </svg>
+  );
+}
+
+function GalleryIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+      <rect x="3" y="4" width="18" height="16" rx="2.5" stroke="#fff" strokeWidth="1.6" />
+      <circle cx="8.5" cy="9.5" r="1.4" stroke="#fff" strokeWidth="1.6" />
+      <path d="M4 16.5 8.5 12l3 3 4-4.5L21 15" stroke="#fff" strokeWidth="1.6" />
+    </svg>
+  );
+}
+
+function GalleryIconSmall({ color }) {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+      <rect x="3" y="4" width="18" height="16" rx="2.5" stroke={color} strokeWidth="1.8" />
+      <circle cx="8.5" cy="9.5" r="1.4" stroke={color} strokeWidth="1.8" />
+      <path d="M4 16.5 8.5 12l3 3 4-4.5L21 15" stroke={color} strokeWidth="1.8" />
+    </svg>
+  );
+}
+
+function NotesIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+      <path d="M6 2.5h9l5 5V20a1.5 1.5 0 0 1-1.5 1.5h-12A1.5 1.5 0 0 1 5 20V4A1.5 1.5 0 0 1 6 2.5Z" stroke="#35e0c0" strokeWidth="1.6" />
+      <path d="M15 2.5V8h5" stroke="#35e0c0" strokeWidth="1.6" />
+    </svg>
+  );
+}
+
+function LinkIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+      <path d="M9 6H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3" stroke="#35e0c0" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M14 4h6v6M20 4l-9 9" stroke="#35e0c0" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function ChatIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+      <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v9a2.5 2.5 0 0 1-2.5 2.5H9l-4 3.5v-3.5h-.5A2.5 2.5 0 0 1 2 14.5v-9A2.5 2.5 0 0 1 4.5 3" stroke="#0d1018" strokeWidth="1.8" />
+    </svg>
+  );
+}
+
+function DropIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+      <path d="M12 2.5s7 8 7 12.5a7 7 0 1 1-14 0c0-4.5 7-12.5 7-12.5Z" stroke="#35c8e0" strokeWidth="1.7" />
+    </svg>
+  );
+}
+
+function BoltIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+      <path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z" stroke="#f5b43c" strokeWidth="1.6" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function DrainIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+      <rect x="4" y="4" width="16" height="16" rx="3" stroke="#35e0c0" strokeWidth="1.6" />
+      <path d="M8 8v8M12 8v8M16 8v8" stroke="#35e0c0" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function RoadIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+      <path d="M8 3 4 21M16 3l4 18" stroke="rgba(255,255,255,.7)" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M12 4v3M12 10.5v3M12 17v3" stroke="rgba(255,255,255,.7)" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function TagIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+      <path d="M12.5 3H5a2 2 0 0 0-2 2v7.5a1 1 0 0 0 .3.7l9 9a1 1 0 0 0 1.4 0l7.5-7.5a1 1 0 0 0 0-1.4l-9-9a1 1 0 0 0-.7-.3Z" stroke="rgba(255,255,255,.6)" strokeWidth="1.6" strokeLinejoin="round" />
+      <circle cx="8" cy="8" r="1.3" stroke="rgba(255,255,255,.6)" strokeWidth="1.6" />
+    </svg>
+  );
+}
+
+function HeartIcon({ filled }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill={filled ? '#ff6b6b' : 'none'}>
+      <path d="M12 20.5s-7.5-4.6-10-9.3C.5 7.8 2.3 4 6 4c2 0 3.5 1.1 6 3.5C14.5 5.1 16 4 18 4c3.7 0 5.5 3.8 4 7.2-2.5 4.7-10 9.3-10 9.3Z" stroke={filled ? '#ff6b6b' : 'rgba(255,255,255,.65)'} strokeWidth="1.8" strokeLinejoin="round" />
+    </svg>
   );
 }
