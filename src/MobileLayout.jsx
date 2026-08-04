@@ -69,8 +69,13 @@ export default function MobileLayout({ pm }) {
       )}
 
       {pm.tab === 'list' && (
-        <div style={{ position: 'absolute', inset: 0, zIndex: 700, background: 'linear-gradient(180deg,rgba(18,20,31,.97),rgba(10,11,18,.99))', animation: 'pmFade .2s ease', paddingTop: 'env(safe-area-inset-top,0px)' }}>
-          <ListPanel pm={pm} />
+        <div style={{ position: 'absolute', inset: 0, zIndex: 700, background: 'linear-gradient(180deg,rgba(18,20,31,.97),rgba(10,11,18,.99))', animation: 'pmFade .2s ease', paddingTop: 'env(safe-area-inset-top,0px)', display: 'flex', flexDirection: 'column', height: '100%' }}>
+          <div style={{ padding: '14px 18px 0' }}>
+            <SearchBar pm={pm} />
+          </div>
+          <div style={{ flex: 1, minHeight: 0 }}>
+            <ListPanel pm={pm} />
+          </div>
         </div>
       )}
 

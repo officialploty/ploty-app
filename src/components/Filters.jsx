@@ -93,5 +93,3 @@ export function CityAreaKindRow({ pm, mapRef }) {
 function Caret() {
   return <span style={{ width: 0, height: 0, borderLeft: '4px solid transparent', borderRight: '4px solid transparent', borderTop: '5px solid rgba(255,255,255,.55)' }} />;
 }
-
-export function priceChip(name, key, cur) { return chip(name, key, cur); }

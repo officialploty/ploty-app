@@ -111,8 +111,10 @@ export function usePlotMap() {
   const [cityMenu, setCityMenu] = useState(false);
   const [areaMenu, setAreaMenu] = useState(false);
   const [sort, setSort] = useState('new');
-  const [priceFilter, setPriceFilter] = useState('all');
   const [kindFilter, setKindFilter] = useState('all');
+  const [ppsfRange, setPpsfRange] = useState(null);
+  const [totalPriceRange, setTotalPriceRange] = useState(null);
+  const [sqftRange, setSqftRange] = useState(null);
   const [selected, setSelected] = useState(null);
   const [mode, setMode] = useState('browse');
   const [pin, setPin] = useState(null);
@@ -211,17 +213,22 @@ export function usePlotMap() {
     let list = plots.filter((p) => isLive(p) && p.city === city);
     if (kindFilter !== 'all') list = list.filter((p) => p.kind === kindFilter);
     if (area !== 'All areas') list = list.filter((p) => p.area === area);
-    if (priceFilter !== 'all') {
-      const b = { value: [0, 4000], mid: [4000, 8000], premium: [8000, Infinity] }[priceFilter];
-      list = list.filter((p) => p.ppsf >= b[0] && p.ppsf < b[1]);
-    }
+    if (ppsfRange) list = list.filter((p) => p.ppsf >= ppsfRange[0] && p.ppsf <= ppsfRange[1]);
+    if (totalPriceRange) list = list.filter((p) => {
+      const total = (p.kind === 'layout' ? p.sizeMin : p.sqft) * p.ppsf;
+      return total >= totalPriceRange[0] && total <= totalPriceRange[1];
+    });
+    if (sqftRange) list = list.filter((p) => {
+      const size = p.kind === 'layout' ? p.sizeMin : p.sqft;
+      return size >= sqftRange[0] && size <= sqftRange[1];
+    });
     const q = query.trim().toLowerCase();
     if (q) list = list.filter((p) => (p.locality + ' ' + p.area + ' ' + p.landmark + ' ' + p.owner).toLowerCase().includes(q));
     if (sort === 'low') list = [...list].sort((a, b) => a.ppsf - b.ppsf);
     else if (sort === 'high') list = [...list].sort((a, b) => b.ppsf - a.ppsf);
     else list = [...list].sort((a, b) => a.days - b.days);
     return list;
-  }, [plots, city, kindFilter, area, priceFilter, query, sort]);
+  }, [plots, city, kindFilter, area, ppsfRange, totalPriceRange, sqftRange, query, sort]);
 
   const sel = useMemo(() => plots.find((p) => p.id === selected) || null, [plots, selected]);
 
@@ -365,7 +372,7 @@ export function usePlotMap() {
           setPlots((prev) => prev.map((p) => (p.id === editId ? { ...mapDbLayout(layout), amenities: form.amenities.slice(), media: [...p.media, ...media] } : p)));
           setEditingId(null);
           setMode('browse'); setPin(null); setSelected(editId); setTab('map');
-          setArea('All areas'); setPriceFilter('all'); setKindFilter('all');
+          setArea('All areas'); setKindFilter('all');
           setFormState(emptyForm);
           flash(sent_back_to_review ? 'Changes saved — sent back for re-review since it was already approved' : 'Changes saved');
         } else {
@@ -373,7 +380,7 @@ export function usePlotMap() {
           const media = form.media.length ? await uploadMedia('layout', layout.id, form.media, auth?.id) : [];
           setPlots((prev) => [{ ...mapDbLayout(layout), amenities: form.amenities.slice(), media }, ...prev]);
           setMode('browse'); setPin(null); setSelected(null); setTab('map');
-          setArea('All areas'); setPriceFilter('all'); setKindFilter('all');
+          setArea('All areas'); setKindFilter('all');
           setFormState(emptyForm);
           flash('Layout submitted for review — you’ll be notified once it’s approved');
         }
@@ -400,7 +407,7 @@ export function usePlotMap() {
         setPlots((prev) => prev.map((p) => (p.id === editId ? { ...mapDbPlot(plot), amenities: form.amenities.slice(), media: [...p.media, ...media] } : p)));
         setEditingId(null);
         setMode('browse'); setPin(null); setSelected(editId); setTab('map');
-        setArea('All areas'); setPriceFilter('all'); setKindFilter('all');
+        setArea('All areas'); setKindFilter('all');
         setFormState(emptyForm);
         flash('Changes saved');
       } else {
@@ -408,7 +415,7 @@ export function usePlotMap() {
         const media = form.media.length ? await uploadMedia('plot', plot.id, form.media, auth?.id) : [];
         setPlots((prev) => [{ ...mapDbPlot(plot), amenities: form.amenities.slice(), media }, ...prev]);
         setMode('browse'); setPin(null); setSelected(plot.id); setTab('map');
-        setArea('All areas'); setPriceFilter('all'); setKindFilter('all');
+        setArea('All areas'); setKindFilter('all');
         setFormState(emptyForm);
         flash(nearby_warning?.length ? 'Plot published — heads up, a similar pin exists nearby' : 'Plot published — live for everyone');
       }
@@ -597,12 +604,13 @@ export function usePlotMap() {
   }, [form.media, flash, setForm]);
 
   return {
-    plots, plotsLoading, visible, sel, tab, city, area, query, focus, cityMenu, areaMenu, sort, priceFilter, kindFilter,
+    plots, plotsLoading, visible, sel, tab, city, area, query, focus, cityMenu, areaMenu, sort, kindFilter,
+    ppsfRange, setPpsfRange, totalPriceRange, setTotalPriceRange, sqftRange, setSqftRange,
     mode, pin, form, saved, toast, placing, choosingKind, formOpen, detailOpen,
     derivedPpsf, derivedTotal, fb, canPublish, publishing, nearbyDuplicates, pendingLayouts, myListings, addMediaToListing,
     editingId, startEdit,
     auth, authPrompt, openAuthPrompt, cancelAuthPrompt, loginWithGoogle, logout,
-    setTab, setQuery, setFocus, setCityMenu, setAreaMenu, setSort, setPriceFilter, setKindFilter,
+    setTab, setQuery, setFocus, setCityMenu, setAreaMenu, setSort, setKindFilter,
     setForm, setPin,
     open, goCity, goArea, startAdd, cancelAdd, backToPlacing, backToKind, chooseKind, confirmLocation, publish,
     approveLayout, rejectLayout,
