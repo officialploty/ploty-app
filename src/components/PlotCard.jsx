@@ -86,7 +86,7 @@ export default function PlotCard({ p, onClick, saved, onToggleSave, onShare }) {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '0.85fr 0.85fr 0.65fr 1.65fr', borderRadius: 12, background: '#f6f9f7', border: '1px solid #e8ece9', overflow: 'hidden' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,0.9fr) minmax(0,0.95fr) minmax(0,0.65fr) minmax(0,1.5fr)', alignItems: 'stretch', borderRadius: 12, background: '#f6f9f7', border: '1px solid #e8ece9', overflow: 'hidden' }}>
         <MetaStat icon={<RulerSmallIcon color={PURPLE} />} color={PURPLE} label="PLOT SIZE" value={f.plotSizeLabel} />
         <MetaStat icon={<RupeeIcon color={GREEN} />} color={GREEN} label="TOTAL PRICE" value={f.totalPriceLabel} border />
         <MetaStat icon={<PlotsIcon color={BLUE} />} color={BLUE} label="PLOTS" value={f.plotsCountLabel} border />
@@ -121,8 +121,16 @@ function MetaStat({ icon, color, label, value, sub, border }) {
         {icon}
       </div>
       <span style={{ font: '600 6.5px/1.15 Manrope', color: SUB, letterSpacing: '.02em', textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>{label}</span>
-      <span style={{ font: '800 11px/1.2 Manrope', color: INK, textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>{value}</span>
-      {sub && <span style={{ font: '600 7px/1.2 Manrope', color, textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>{sub}</span>}
+      <span style={{
+        font: '800 11px/1.2 Manrope', color: INK, textAlign: 'center', maxWidth: '100%', wordBreak: 'break-word',
+        display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+      }}>{value}</span>
+      {sub && (
+        <span style={{
+          font: '600 7px/1.25 Manrope', color, textAlign: 'center', maxWidth: '100%', wordBreak: 'break-word',
+          display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+        }}>{sub}</span>
+      )}
     </div>
   );
 }
