@@ -1,15 +1,15 @@
 // Shared between submit-plot, submit-layout, update-plot, update-layout.
 //
 // sync_listing_landmarks() (supabase/sql/landmarks.sql) already ran as a DB
-// trigger by the time this is called — it wrote up to 35 candidate rows
-// (top 5 per category) into listing_landmarks using straight-line distance.
-// This function refines those candidates to real routable distance/time via
-// Ola Maps Distance Matrix Basic (no live traffic needed — landmark
-// distance is static), then trims to the final 10 with a 3-per-category
-// cap so no one category (e.g. malls) crowds out the rest. The per-category
-// candidate selection upstream is what makes this cap actually work — a
-// flat top-N pool can come back with zero variety if one category
-// dominates the score (see landmarks.sql's comment on sync_listing_landmarks).
+// trigger by the time this is called — it wrote up to 5-per-category
+// candidate rows into listing_landmarks using straight-line distance. This
+// function refines those candidates to real routable distance/time via Ola
+// Maps Distance Matrix Basic (no live traffic needed — landmark distance is
+// static), re-scores with the same decay formula sync_listing_landmarks
+// uses (score = weight * (1 / (1 + distance_km / 3)) + priority * 0.5, see
+// that function's comment for why), then keeps the top 3 per category —
+// no overall cap, so a listing with all 6 categories present can show up
+// to 18 landmarks total, not squeezed down to a fixed 10.
 //
 // Call this fire-and-forget, after the HTTP response has already been sent
 // (via EdgeRuntime.waitUntil) — a buyer publishing a plot shouldn't wait on
@@ -27,7 +27,6 @@
 import { createClient } from "@supabase/supabase-js";
 
 const CATEGORY_CAP = 3;
-const FINAL_COUNT = 10;
 
 export async function refineListingDistances(
   ownerType: "plot" | "layout",
@@ -48,7 +47,7 @@ export async function refineListingDistances(
 
   const { data: candidates, error: fetchErr } = await supabase
     .from("listing_landmarks")
-    .select("landmark_id, landmarks(lat, lng, category, weight)")
+    .select("landmark_id, landmarks(lat, lng, category, weight, priority)")
     .eq("owner_type", ownerType)
     .eq("owner_id", ownerId);
 
@@ -80,19 +79,21 @@ export async function refineListingDistances(
     return;
   }
 
-  // Re-score each candidate with real distance, same weight*10 - distance
-  // formula sync_listing_landmarks used with the straight-line estimate.
+  // Re-score each candidate with real distance, same decay formula
+  // sync_listing_landmarks used with the straight-line estimate.
   const refined = candidates.map((c: any, i: number) => {
     const el = elements[i];
     const distanceKm = el?.status === "OK" ? el.distance / 1000 : null;
     const driveTimeMin = el?.status === "OK" ? Math.max(1, Math.round(el.duration / 60)) : null;
+    const score = distanceKm === null
+      ? -Infinity
+      : c.landmarks.weight * (1 / (1 + distanceKm / 3)) + c.landmarks.priority * 0.5;
     return {
       landmark_id: c.landmark_id,
       category: c.landmarks.category,
-      weight: c.landmarks.weight,
       distanceKm,
       driveTimeMin,
-      score: distanceKm === null ? -Infinity : c.landmarks.weight * 10 - distanceKm,
+      score,
     };
   }).filter((c) => c.distanceKm !== null);
 
@@ -100,6 +101,7 @@ export async function refineListingDistances(
 
   refined.sort((a, b) => b.score - a.score);
 
+  // Top 3 per category, no overall cap.
   const perCategoryCount: Record<string, number> = {};
   const final: typeof refined = [];
   for (const c of refined) {
@@ -107,8 +109,9 @@ export async function refineListingDistances(
     if (used >= CATEGORY_CAP) continue;
     perCategoryCount[c.category] = used + 1;
     final.push(c);
-    if (final.length === FINAL_COUNT) break;
   }
+
+  final.sort((a, b) => b.score - a.score);
 
   const keepIds = final.map((c) => c.landmark_id);
 

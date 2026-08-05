@@ -2,16 +2,16 @@
 -- Run after schema.sql (and nearby_plots.sql). Additive only.
 --
 -- Adds a curated master landmark database plus a join table that stores,
--- for every plot/layout, the 10 nearest landmarks with a precomputed
--- distance and estimated drive time. sync_listing_landmarks() writes up to
--- 35 straight-line candidates first (top 5 per category, cheap, instant,
--- never blank) — per-category, not a single global top-N, because
--- high-weight categories like connectivity (roads/metro, weight 5) can
--- otherwise dominate every slot and starve healthcare/education/etc out of
--- the candidate pool entirely. An Ola Maps Distance Matrix call then
--- refines those candidates to real routable distance/time and trims to the
--- final 10 (capped at 3/category) — see
--- supabase/functions/_shared/landmarks.ts. This is NOT live data — the
+-- for every plot/layout, the nearest landmarks (up to 3 per category) with
+-- a precomputed distance and estimated drive time. sync_listing_landmarks()
+-- writes up to 30 straight-line candidates first (top 5 per category,
+-- cheap, instant, never blank) — per-category, not a single global top-N,
+-- because high-weight categories like connectivity (roads/metro, weight 5)
+-- can otherwise dominate every slot and starve healthcare/education/etc out
+-- of the candidate pool entirely. An Ola Maps Distance Matrix call then
+-- refines those candidates to real routable distance/time and trims each
+-- category down to its top 3 — see supabase/functions/_shared/landmarks.ts.
+-- This is NOT live data — the
 -- landmark list is maintained by hand every 6-12 months, and the
 -- per-listing distances are computed once (via trigger) whenever a
 -- listing's location is set or changed.
@@ -24,7 +24,7 @@ create table public.landmarks (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   category text not null check (category in (
-    'connectivity', 'employment', 'education', 'healthcare', 'shopping', 'recreation', 'civic'
+    'connectivity', 'employment', 'education', 'healthcare', 'shopping', 'recreation', 'civic', 'worship'
   )),
   icon text not null default '📍',
   location geography(point, 4326) not null,
@@ -47,6 +47,7 @@ create table public.landmarks (
       when '🏢' then 4  -- employment / IT park
       when '🎓' then 3  -- education
       when '🏥' then 3  -- healthcare
+      when '🛕' then 3  -- worship
       when '🛍' then 2  -- shopping
       when '🌳' then 2  -- recreation
       when '🏛' then 2  -- civic
@@ -86,7 +87,7 @@ create policy "staff can maintain landmarks"
 
 
 -- ============================================================
--- LISTING_LANDMARKS — precomputed top-10 nearest landmarks per listing
+-- LISTING_LANDMARKS — precomputed nearest landmarks per listing, up to 3 per category
 -- (polymorphic owner_type + owner_id, same pattern as media/listing_amenities)
 -- ============================================================
 
@@ -122,23 +123,36 @@ grant select, update, delete on public.listing_landmarks to service_role;
 -- ============================================================
 -- SYNC FUNCTION — recomputes the top-5-per-category candidate landmarks
 -- for one listing (straight-line only; refineListingDistances() in the
--- Edge Function layer narrows this to the final 10 using real Ola Maps
--- drive distance/time).
+-- Edge Function layer narrows each category down to its top 3 using real
+-- Ola Maps drive distance/time).
 -- security definer: owners can't write listing_landmarks directly (it's
 -- read-only via RLS), so this runs as the table owner, the same way
 -- handle_new_user() bypasses RLS on profiles.
 --
 -- Ranking isn't pure distance — a highway 3km away is a more useful thing
--- to show a buyer than a mall 200m away. Each category tier (`weight`,
--- 2-5) is worth 10 score points, so one tier of difference outweighs up
--- to a 10km gap in distance before proximity wins out. Rank 1 (the
--- highest-scoring row) is what the listing card features as its headline
--- landmark — see listCardFields() in fields.js. Candidates are picked top-5
--- PER CATEGORY (not one global top-N) — a single global ranking lets
--- high-weight categories like connectivity (roads/metro, weight 5) sweep
--- every slot and starve out healthcare/education/shopping/etc entirely,
--- which then breaks the Edge Function's per-category cap downstream since
--- it has nothing but one category to choose from.
+-- to show a buyer than a mall 200m away. Score decays smoothly with
+-- distance rather than subtracting it linearly, because buyer perception
+-- of proximity isn't linear either: the gap between 1km and 3km away
+-- matters a lot, the gap between 20km and 22km barely registers.
+--   score = weight * (1 / (1 + distance_km / 3)) + priority * 0.5
+-- At 0km a landmark scores its full weight; at 3km, half; at ~12km, ~20%.
+-- `priority` (unlike `weight`, which ranks categories against each other)
+-- breaks ties WITHIN a category — e.g. Chennai International Airport vs.
+-- a minor bus stand, both weight 5, but not equally significant. Rank 1
+-- (the highest-scoring row) is what the listing card features as its
+-- headline landmark — see listCardFields() in fields.js. Candidates are
+-- picked top-5 PER CATEGORY (not one global top-N) — a single global
+-- ranking lets high-weight categories like connectivity (roads/metro,
+-- weight 5) sweep every slot and starve out healthcare/education/etc
+-- entirely, which then breaks the Edge Function's guarantee-then-fill
+-- selection downstream since it has nothing but one category to choose
+-- from.
+--
+-- Only 6 categories are actually synced (connectivity, employment,
+-- education, healthcare, shopping, worship) — recreation and civic are
+-- excluded here deliberately. Their existing landmark rows are left alone
+-- in the table (not deleted, not re-tagged); this function just never
+-- selects them, so they're inert rather than gone.
 -- ============================================================
 
 create or replace function public.sync_listing_landmarks(
@@ -166,12 +180,15 @@ begin
     select
       l.id,
       (ST_Distance(l.location, ST_SetSRID(ST_MakePoint(p_lng, p_lat), 4326)::geography) / 1000) as distance_km,
-      (l.weight * 10 - (ST_Distance(l.location, ST_SetSRID(ST_MakePoint(p_lng, p_lat), 4326)::geography) / 1000)) as score,
+      (l.weight * (1.0 / (1.0 + (ST_Distance(l.location, ST_SetSRID(ST_MakePoint(p_lng, p_lat), 4326)::geography) / 1000) / 3.0))
+        + l.priority * 0.5) as score,
       row_number() over (
         partition by l.category
-        order by (l.weight * 10 - (ST_Distance(l.location, ST_SetSRID(ST_MakePoint(p_lng, p_lat), 4326)::geography) / 1000)) desc
+        order by (l.weight * (1.0 / (1.0 + (ST_Distance(l.location, ST_SetSRID(ST_MakePoint(p_lng, p_lat), 4326)::geography) / 1000) / 3.0))
+          + l.priority * 0.5) desc
       ) as category_rank
     from public.landmarks l
+    where l.category in ('connectivity', 'employment', 'education', 'healthcare', 'shopping', 'worship')
   ) candidates
   where candidates.category_rank <= 5;
 end;

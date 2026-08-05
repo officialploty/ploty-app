@@ -9,6 +9,40 @@ const BLUE = '#3d7fd9';
 const INK = '#1a1e1c';
 const SUB = '#6b7570';
 
+// recreation and civic are deliberately excluded — sync_listing_landmarks
+// (supabase/sql/landmarks.sql) no longer selects them, though old rows may
+// still exist until a listing is re-synced. groupLandmarksByCategory falls
+// back to an uppercased raw label for any category not listed here, so
+// stale rows still render fine rather than breaking.
+const CATEGORY_ORDER = ['connectivity', 'employment', 'education', 'healthcare', 'worship', 'shopping'];
+const CATEGORY_LABELS = {
+  connectivity: 'CONNECTIVITY', employment: 'EMPLOYMENT', education: 'EDUCATION', healthcare: 'HEALTHCARE',
+  worship: 'PLACES OF WORSHIP', shopping: 'SHOPPING',
+};
+
+// d.landmarks arrives sorted by rank (score-based — weight/priority/decay
+// mixed, not pure distance). Group into sections, sort each section by
+// distance ascending (nearest first reads better than score order once
+// you're already looking at a single category), and order the sections
+// themselves consistently listing to listing rather than by whichever
+// category happened to rank highest this time.
+function groupLandmarksByCategory(landmarks) {
+  const byCategory = new Map();
+  for (const l of landmarks) {
+    const list = byCategory.get(l.category) || [];
+    list.push(l);
+    byCategory.set(l.category, list);
+  }
+  for (const list of byCategory.values()) {
+    list.sort((a, b) => a.distanceKm - b.distanceKm);
+  }
+  const ordered = CATEGORY_ORDER.filter((c) => byCategory.has(c));
+  for (const c of byCategory.keys()) {
+    if (!ordered.includes(c)) ordered.push(c);
+  }
+  return ordered.map((c) => [c, byCategory.get(c)]);
+}
+
 export default function DetailContent({ sel, saved, onToggleSave, onContact }) {
   const d = detailFields(sel);
   const [lightboxIndex, setLightboxIndex] = useState(null);
@@ -105,15 +139,20 @@ export default function DetailContent({ sel, saved, onToggleSave, onContact }) {
 
       {d.landmarks.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-          <div style={{ font: '700 11px/1 Manrope', color: '#6b7570', letterSpacing: '.12em' }}>📍 CONNECTIVITY &amp; NEARBY PLACES</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {d.landmarks.map((l) => (
-              <div key={l.name} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 13px', borderRadius: 14, background: '#f6f9f7', border: '1px solid #e8ece9' }}>
-                <span style={{ width: 34, height: 34, borderRadius: 10, background: '#ffffff', border: '1px solid #e8ece9', flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15 }}>{l.icon}</span>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0, flex: 1 }}>
-                  <span style={{ font: '700 12.5px/1.3 Manrope', color: INK, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{l.name}</span>
-                  <span style={{ font: '500 11px/1 Manrope', color: '#6b7570' }}>{l.distanceKm} km · {l.driveTimeMin} min drive</span>
-                </div>
+          <div style={{ font: '700 11px/1 Manrope', color: '#6b7570', letterSpacing: '.12em' }}>📍 NEARBY PLACES</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 10px' }}>
+            {groupLandmarksByCategory(d.landmarks).map(([category, items]) => (
+              <div key={category} style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 0 }}>
+                <div style={{ font: '700 10px/1 Manrope', color: '#8a958f', letterSpacing: '.1em' }}>{CATEGORY_LABELS[category] || category.toUpperCase()}</div>
+                {items.map((l) => (
+                  <div key={l.name} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '10px', borderRadius: 14, background: '#f6f9f7', border: '1px solid #e8ece9', minWidth: 0 }}>
+                    <span style={{ width: 30, height: 30, borderRadius: 9, background: '#ffffff', border: '1px solid #e8ece9', flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13 }}>{l.icon}</span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0, flex: 1 }}>
+                      <span style={{ font: '700 11.5px/1.3 Manrope', color: INK, overflowWrap: 'break-word', wordBreak: 'break-word' }}>{l.name}</span>
+                      <span style={{ font: '500 10.5px/1 Manrope', color: '#6b7570' }}>{l.distanceKm} km · {l.driveTimeMin} min</span>
+                    </div>
+                  </div>
+                ))}
               </div>
             ))}
           </div>
