@@ -103,6 +103,23 @@ export default function DetailContent({ sel, saved, onToggleSave, onContact }) {
         </div>
       )}
 
+      {d.landmarks.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+          <div style={{ font: '700 11px/1 Manrope', color: '#6b7570', letterSpacing: '.12em' }}>📍 CONNECTIVITY &amp; NEARBY PLACES</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {d.landmarks.map((l) => (
+              <div key={l.name} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 13px', borderRadius: 14, background: '#f6f9f7', border: '1px solid #e8ece9' }}>
+                <span style={{ width: 34, height: 34, borderRadius: 10, background: '#ffffff', border: '1px solid #e8ece9', flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15 }}>{l.icon}</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0, flex: 1 }}>
+                  <span style={{ font: '700 12.5px/1.3 Manrope', color: INK, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{l.name}</span>
+                  <span style={{ font: '500 11px/1 Manrope', color: '#6b7570' }}>{l.distanceKm} km · {l.driveTimeMin} min drive</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: 9, padding: '13px 15px', borderRadius: 16, background: '#f6f9f7', border: '1px solid #e8ece9' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <NotesIcon />

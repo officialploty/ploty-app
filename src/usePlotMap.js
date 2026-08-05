@@ -33,7 +33,7 @@ function mapDbPlot(row) {
     notes: row.notes || 'No additional notes provided by the lister.',
     owner: row.owner || 'Unknown', landmark: row.landmark || 'Pinned by lister',
     contact: row.contact || 'Not shared', days: daysSince(row.created_at),
-    amenities: [], media: [], submittedBy: row.submitted_by, updatedAt: row.updated_at,
+    amenities: [], media: [], landmarks: [], submittedBy: row.submitted_by, updatedAt: row.updated_at,
   };
 }
 
@@ -45,7 +45,7 @@ function mapDbLayout(row) {
     notes: row.notes || 'No additional notes provided by the developer.',
     owner: row.owner || 'Developer', landmark: row.landmark || 'Pinned by developer',
     approval: row.approval_number || 'Not stated', contact: row.contact || 'Not shared',
-    days: daysSince(row.created_at), amenities: [], media: [],
+    days: daysSince(row.created_at), amenities: [], media: [], landmarks: [],
     status: row.status, submittedBy: row.submitted_by, updatedAt: row.updated_at,
   };
 }
@@ -165,16 +165,19 @@ export function usePlotMap() {
       { data: layoutRows, error: layoutErr },
       { data: mediaRows, error: mediaErr },
       { data: amenityRows, error: amenityErr },
+      { data: landmarkRows, error: landmarkErr },
     ] = await Promise.all([
       supabase.from('plots').select('*'),
       supabase.from('layouts').select('*'),
       supabase.from('media').select('*').order('position', { ascending: true }),
       supabase.from('listing_amenities').select('owner_type, owner_id, amenities(name)'),
+      supabase.from('listing_landmarks').select('owner_type, owner_id, distance_km, drive_time_min, rank, landmarks(name, category, icon)').order('rank', { ascending: true }),
     ]);
     if (plotErr) console.error('failed to load plots:', plotErr.message);
     if (layoutErr) console.error('failed to load layouts:', layoutErr.message);
     if (mediaErr) console.error('failed to load media:', mediaErr.message);
     if (amenityErr) console.error('failed to load amenities:', amenityErr.message);
+    if (landmarkErr) console.error('failed to load landmarks:', landmarkErr.message);
 
     const mediaByOwner = new Map();
     for (const row of mediaRows || []) {
@@ -193,11 +196,26 @@ export function usePlotMap() {
       amenitiesByOwner.set(key, list);
     }
 
+    const landmarksByOwner = new Map();
+    for (const row of landmarkRows || []) {
+      const key = row.owner_type + ':' + row.owner_id;
+      const list = landmarksByOwner.get(key) || [];
+      if (row.landmarks) {
+        list.push({
+          name: row.landmarks.name, category: row.landmarks.category, icon: row.landmarks.icon,
+          distanceKm: row.distance_km, driveTimeMin: row.drive_time_min,
+        });
+      }
+      landmarksByOwner.set(key, list);
+    }
+
     const plots_ = (plotRows || []).map((r) => ({
       ...mapDbPlot(r), media: mediaByOwner.get('plot:' + r.id) || [], amenities: amenitiesByOwner.get('plot:' + r.id) || [],
+      landmarks: landmarksByOwner.get('plot:' + r.id) || [],
     }));
     const layouts_ = (layoutRows || []).map((r) => ({
       ...mapDbLayout(r), media: mediaByOwner.get('layout:' + r.id) || [], amenities: amenitiesByOwner.get('layout:' + r.id) || [],
+      landmarks: landmarksByOwner.get('layout:' + r.id) || [],
     }));
     setPlots([...plots_, ...layouts_]);
     setPlotsLoading(false);

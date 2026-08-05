@@ -54,7 +54,7 @@ export function detailFields(sel) {
     })),
     noMedia: sel.media.length === 0,
     mediaCount: sel.media.length ? photoCount + ' photo' + (photoCount === 1 ? '' : 's') + (hasVideo ? ' + video' : '') : 'None',
-    notes: sel.notes, owner: sel.owner, amenities: sel.amenities || [],
+    notes: sel.notes, owner: sel.owner, amenities: sel.amenities || [], landmarks: sel.landmarks || [],
     age: sel.days === 1 ? 'listed yesterday' : 'listed ' + sel.days + ' days ago',
     coords: sel.lat.toFixed(5) + '° N, ' + sel.lng.toFixed(5) + '° E',
     landmark: sel.landmark,
