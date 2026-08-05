@@ -86,7 +86,7 @@ export default function PlotCard({ p, onClick, saved, onToggleSave, onShare }) {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', borderRadius: 12, background: '#f6f9f7', border: '1px solid #e8ece9', overflow: 'hidden' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '0.85fr 0.85fr 0.65fr 1.65fr', borderRadius: 12, background: '#f6f9f7', border: '1px solid #e8ece9', overflow: 'hidden' }}>
         <MetaStat icon={<RulerSmallIcon color={PURPLE} />} color={PURPLE} label="PLOT SIZE" value={f.plotSizeLabel} />
         <MetaStat icon={<RupeeIcon color={GREEN} />} color={GREEN} label="TOTAL PRICE" value={f.totalPriceLabel} border />
         <MetaStat icon={<PlotsIcon color={BLUE} />} color={BLUE} label="PLOTS" value={f.plotsCountLabel} border />
