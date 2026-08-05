@@ -2,6 +2,7 @@ import { band, inr, kShort, ppsfLabel, sqftRange } from './utils';
 
 export function listCardFields(p) {
   const isLayout = p.kind === 'layout';
+  const nearest = (p.landmarks || []).find((l) => l.category === 'connectivity') || (p.landmarks || [])[0] || null;
   return {
     id: p.id,
     locality: p.locality,
@@ -18,6 +19,8 @@ export function listCardFields(p) {
     totalPriceLabel: isLayout ? inr(p.sizeMin * p.ppsf) : inr(p.sqft * p.ppsf),
     plotsCountLabel: isLayout ? String(p.plots) : '1',
     age: p.days === 1 ? 'Listed yesterday' : 'Listed ' + p.days + ' days ago',
+    distanceLabel: nearest ? nearest.distanceKm + ' km' : '—',
+    distanceLandmark: nearest ? nearest.name : 'No data yet',
   };
 }
 

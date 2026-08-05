@@ -12,8 +12,6 @@ const SUB = '#6b7570';
 export default function PlotCard({ p, onClick, saved, onToggleSave, onShare }) {
   const f = listCardFields(p);
   const isSaved = saved && saved.includes(f.id);
-  const distanceLabel = '3.2 km';
-  const distanceLandmark = 'GST Road';
 
   return (
     <div
@@ -92,7 +90,7 @@ export default function PlotCard({ p, onClick, saved, onToggleSave, onShare }) {
         <MetaStat icon={<RulerSmallIcon color={PURPLE} />} color={PURPLE} label="PLOT SIZE" value={f.plotSizeLabel} />
         <MetaStat icon={<RupeeIcon color={GREEN} />} color={GREEN} label="TOTAL PRICE" value={f.totalPriceLabel} border />
         <MetaStat icon={<PlotsIcon color={BLUE} />} color={BLUE} label="PLOTS" value={f.plotsCountLabel} border />
-        <MetaStat icon={<CarIcon color={AMBER} />} color={AMBER} label="DISTANCE" value={distanceLabel} sub={distanceLandmark} border />
+        <MetaStat icon={<CarIcon color={AMBER} />} color={AMBER} label="DISTANCE" value={f.distanceLabel} sub={f.distanceLandmark} border />
       </div>
     </div>
   );
