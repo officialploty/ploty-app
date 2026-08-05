@@ -4,13 +4,13 @@
 html, body, #root { height: 100%; }
 body {
   margin: 0;
-  background: #0a0b12;
+  background: #f4f7f5;
   font-family: Manrope, -apple-system, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
-  color: #fff;
+  color: #1a1e1c;
 }
-a { color: #35e0c0; }
-a:hover { color: #8b7bff; }
+a { color: #1f9d64; }
+a:hover { color: #8355c9; }
 
 @keyframes pmPulse {
   0% { transform: scale(.7); opacity: .55; }
@@ -22,10 +22,10 @@ a:hover { color: #8b7bff; }
 @keyframes pmSlide { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes pmSlideRight { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
 
-.leaflet-control-attribution { font-size: 8px !important; background: rgba(10,11,18,.5) !important; color: rgba(255,255,255,.35) !important; }
-.leaflet-control-attribution a { color: rgba(255,255,255,.45) !important; }
+.leaflet-control-attribution { font-size: 8px !important; background: rgba(255,255,255,.7) !important; color: rgba(20,24,22,.45) !important; }
+.leaflet-control-attribution a { color: rgba(20,24,22,.6) !important; }
 .leaflet-control-zoom { display: none !important; }
-.leaflet-container { background: #12141f; }
+.leaflet-container { background: #eef1ef; }
 
 .pmScroll { scrollbar-width: none; }
 .pmScroll::-webkit-scrollbar { width: 0; height: 0; }
@@ -33,12 +33,13 @@ a:hover { color: #8b7bff; }
 button, input, textarea { font-family: inherit; }
 
 .pmInput {
-  background: rgba(255,255,255,.06);
-  border: 1px solid rgba(255,255,255,.12);
+  background: #f6f9f7;
+  border: 1px solid #e5e9e6;
   outline: 0;
-  color: #fff;
+  color: #1a1e1c;
   border-radius: 16px;
 }
+.pmInput::placeholder { color: #8a958f; }
 
 .pmRange {
   position: absolute;
@@ -55,9 +56,9 @@ button, input, textarea { font-family: inherit; }
   pointer-events: auto;
   width: 20px; height: 20px;
   border-radius: 99px;
-  background: #35e0c0;
-  border: 3px solid #0a0b12;
-  box-shadow: 0 2px 6px rgba(0,0,0,.5);
+  background: #1f9d64;
+  border: 3px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(22,40,31,.35);
   cursor: pointer;
   margin-top: 0;
 }
@@ -65,9 +66,11 @@ button, input, textarea { font-family: inherit; }
   pointer-events: auto;
   width: 20px; height: 20px;
   border-radius: 99px;
-  background: #35e0c0;
-  border: 3px solid #0a0b12;
-  box-shadow: 0 2px 6px rgba(0,0,0,.5);
+  background: #1f9d64;
+  border: 3px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(22,40,31,.35);
   cursor: pointer;
 }
-.pmInput::placeholder { color: rgba(255,255,255,.32); }
+
+.pmRangeLight::-webkit-slider-thumb { background: #1f9d64; border: 3px solid #ffffff; }
+.pmRangeLight::-moz-range-thumb { background: #1f9d64; border: 3px solid #ffffff; }

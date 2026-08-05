@@ -37,10 +37,10 @@ export function detailFields(sel) {
     trustText: isLayout
       ? 'Developer Listed · prices are indicative ranges published by the developer, not verified by Ploty.'
       : 'Community Listed · unverified. Details are submitted by a member, not checked by Ploty.',
-    trustColor: isLayout ? '#8ef0dd' : '#c3bbff',
-    trustBg: isLayout ? 'rgba(53,224,192,.1)' : 'rgba(139,123,255,.1)',
-    trustBorder: isLayout ? 'rgba(53,224,192,.26)' : 'rgba(139,123,255,.26)',
-    trustMark: isLayout ? '#35e0c0' : '#8b7bff',
+    trustColor: isLayout ? '#146b41' : '#5c3a97',
+    trustBg: isLayout ? '#e5f5ec' : '#f1ecfa',
+    trustBorder: isLayout ? '#a8dcbf' : '#d9caf0',
+    trustMark: isLayout ? '#1f9d64' : '#8355c9',
     ownerLabel: isLayout ? 'DEVELOPER' : 'LISTED BY',
     bandBg: b.bg,
     bandLabel: isLayout ? 'LAYOUT' : b.label,

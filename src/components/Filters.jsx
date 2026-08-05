@@ -3,9 +3,9 @@ import { CITIES } from '../data';
 function chip(name, key, cur) {
   return {
     name,
-    bg: cur === key ? 'rgba(53,224,192,.18)' : 'rgba(255,255,255,.06)',
-    border: cur === key ? 'rgba(53,224,192,.45)' : 'rgba(255,255,255,.1)',
-    color: cur === key ? '#35e0c0' : 'rgba(255,255,255,.62)',
+    bg: cur === key ? '#e5f5ec' : '#f6f9f7',
+    border: cur === key ? '#a8dcbf' : '#e5e9e6',
+    color: cur === key ? '#146b41' : '#495650',
   };
 }
 
@@ -15,7 +15,7 @@ export function CityAreaKindRow({ pm, mapRef }) {
   const isLive = (p) => p.kind !== 'layout' || !p.status || p.status === 'approved';
   const cityOptions = Object.keys(CITIES).map((name) => ({
     name, count: pm.plots.filter((p) => p.city === name && isLive(p)).length,
-    bg: name === city ? 'rgba(139,123,255,.22)' : 'transparent',
+    bg: name === city ? '#f1ecfa' : 'transparent',
   }));
 
   const areaOptions = CITIES[city].areas.map((name) => ({ name, ...chip(name, name, area) }));
@@ -24,31 +24,31 @@ export function CityAreaKindRow({ pm, mapRef }) {
     { key: 'all', label: 'All' }, { key: 'plot', label: 'Individual' }, { key: 'layout', label: 'Developer' },
   ].map((o) => ({
     ...o,
-    bg: kindFilter === o.key ? 'rgba(53,224,192,.9)' : 'transparent',
-    color: kindFilter === o.key ? '#0d1018' : 'rgba(255,255,255,.6)',
+    bg: kindFilter === o.key ? '#1f9d64' : 'transparent',
+    color: kindFilter === o.key ? '#fff' : '#6b7570',
   }));
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <div onClick={() => { setCityMenu(!cityMenu); setAreaMenu(false); }} style={{ display: 'flex', alignItems: 'center', gap: 7, height: 34, padding: '0 13px', borderRadius: 99, background: 'rgba(23,26,44,.7)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,.13)', cursor: 'pointer' }}>
-          <span style={{ font: '700 12.5px/1 Manrope', color: '#fff' }}>{city}</span>
+        <div onClick={() => { setCityMenu(!cityMenu); setAreaMenu(false); }} style={{ display: 'flex', alignItems: 'center', gap: 7, height: 34, padding: '0 13px', borderRadius: 99, background: 'rgba(255,255,255,.88)', backdropFilter: 'blur(20px)', border: '1px solid rgba(20,40,31,.1)', cursor: 'pointer' }}>
+          <span style={{ font: '700 12.5px/1 Manrope', color: '#1a1e1c' }}>{city}</span>
           <Caret />
         </div>
-        <div onClick={() => { setAreaMenu(!areaMenu); setCityMenu(false); }} style={{ display: 'flex', alignItems: 'center', gap: 7, height: 34, padding: '0 13px', borderRadius: 99, background: 'rgba(23,26,44,.7)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,.13)', cursor: 'pointer' }}>
-          <span style={{ font: '700 12.5px/1 Manrope', color: area === 'All areas' ? '#fff' : '#35e0c0' }}>{area}</span>
+        <div onClick={() => { setAreaMenu(!areaMenu); setCityMenu(false); }} style={{ display: 'flex', alignItems: 'center', gap: 7, height: 34, padding: '0 13px', borderRadius: 99, background: 'rgba(255,255,255,.88)', backdropFilter: 'blur(20px)', border: '1px solid rgba(20,40,31,.1)', cursor: 'pointer' }}>
+          <span style={{ font: '700 12.5px/1 Manrope', color: area === 'All areas' ? '#1a1e1c' : '#1f9d64' }}>{area}</span>
           <Caret />
         </div>
         <div style={{ flex: 1 }} />
-        <div onClick={() => mapRef.current && mapRef.current.flyTo(CITIES[city].center, CITIES[city].zoom)} style={{ width: 34, height: 34, borderRadius: 99, background: 'rgba(23,26,44,.7)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,.13)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-          <div style={{ width: 13, height: 13, border: '2px solid #8b7bff', borderRadius: 99, position: 'relative' }}>
-            <div style={{ position: 'absolute', left: -5, top: 5, width: 3, height: 1.5, background: '#8b7bff' }} />
-            <div style={{ position: 'absolute', right: -5, top: 5, width: 3, height: 1.5, background: '#8b7bff' }} />
+        <div onClick={() => mapRef.current && mapRef.current.flyTo(CITIES[city].center, CITIES[city].zoom)} style={{ width: 34, height: 34, borderRadius: 99, background: 'rgba(255,255,255,.88)', backdropFilter: 'blur(20px)', border: '1px solid rgba(20,40,31,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <div style={{ width: 13, height: 13, border: '2px solid #8355c9', borderRadius: 99, position: 'relative' }}>
+            <div style={{ position: 'absolute', left: -5, top: 5, width: 3, height: 1.5, background: '#8355c9' }} />
+            <div style={{ position: 'absolute', right: -5, top: 5, width: 3, height: 1.5, background: '#8355c9' }} />
           </div>
         </div>
       </div>
 
-      <div style={{ display: 'flex', padding: 3, borderRadius: 99, background: 'rgba(23,26,44,.72)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,.13)', alignSelf: 'flex-start', boxShadow: '0 12px 30px -14px rgba(0,0,0,.75)' }}>
+      <div style={{ display: 'flex', padding: 3, borderRadius: 99, background: 'rgba(255,255,255,.88)', backdropFilter: 'blur(20px)', border: '1px solid rgba(20,40,31,.1)', alignSelf: 'flex-start', boxShadow: '0 12px 30px -14px rgba(22,40,31,.3)' }}>
         {kindSegments.map((k) => (
           <div key={k.key} onClick={() => setKindFilter(k.key)} style={{ padding: '7px 14px', borderRadius: 99, background: k.bg, cursor: 'pointer' }}>
             <span style={{ font: '700 11.5px/1 Manrope', color: k.color, letterSpacing: '.02em' }}>{k.label}</span>
@@ -57,18 +57,18 @@ export function CityAreaKindRow({ pm, mapRef }) {
       </div>
 
       {cityMenu && (
-        <div style={{ borderRadius: 18, padding: 6, background: 'rgba(23,26,44,.88)', backdropFilter: 'blur(26px)', border: '1px solid rgba(255,255,255,.12)', boxShadow: '0 20px 44px -14px rgba(0,0,0,.8)', animation: 'pmSlide .16s ease', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ borderRadius: 18, padding: 6, background: '#ffffff', backdropFilter: 'blur(26px)', border: '1px solid #e5e9e6', boxShadow: '0 20px 44px -14px rgba(22,40,31,.3)', animation: 'pmSlide .16s ease', display: 'flex', flexDirection: 'column' }}>
           {cityOptions.map((c) => (
             <div key={c.name} onClick={() => goCity(c.name, (cfg) => mapRef.current && mapRef.current.flyTo(cfg.center, cfg.zoom))} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 12px', borderRadius: 13, background: c.bg, cursor: 'pointer' }}>
-              <span style={{ font: '600 13.5px/1 Manrope', color: '#fff' }}>{c.name}</span>
-              <span style={{ font: '600 11px/1 Manrope', color: 'rgba(255,255,255,.4)' }}>{c.count} plots</span>
+              <span style={{ font: '600 13.5px/1 Manrope', color: '#1a1e1c' }}>{c.name}</span>
+              <span style={{ font: '600 11px/1 Manrope', color: '#8a958f' }}>{c.count} plots</span>
             </div>
           ))}
         </div>
       )}
 
       {areaMenu && (
-        <div style={{ borderRadius: 18, padding: 10, background: 'rgba(23,26,44,.88)', backdropFilter: 'blur(26px)', border: '1px solid rgba(255,255,255,.12)', boxShadow: '0 20px 44px -14px rgba(0,0,0,.8)', animation: 'pmSlide .16s ease', display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+        <div style={{ borderRadius: 18, padding: 10, background: '#ffffff', backdropFilter: 'blur(26px)', border: '1px solid #e5e9e6', boxShadow: '0 20px 44px -14px rgba(22,40,31,.3)', animation: 'pmSlide .16s ease', display: 'flex', flexWrap: 'wrap', gap: 7 }}>
           {areaOptions.map((a) => (
             <div
               key={a.name}
@@ -91,5 +91,5 @@ export function CityAreaKindRow({ pm, mapRef }) {
 }
 
 function Caret() {
-  return <span style={{ width: 0, height: 0, borderLeft: '4px solid transparent', borderRight: '4px solid transparent', borderTop: '5px solid rgba(255,255,255,.55)' }} />;
+  return <span style={{ width: 0, height: 0, borderLeft: '4px solid transparent', borderRight: '4px solid transparent', borderTop: '5px solid #6b7570' }} />;
 }

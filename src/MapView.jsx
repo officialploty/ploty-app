@@ -4,7 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import { CITIES } from './data';
 import { band, kShort, ppsfLabel } from './utils';
 
-const TILE_URL = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+const TILE_URL = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
 
 function markerHtml(p, sel) {
   const b = band(p.ppsf);
@@ -95,8 +95,8 @@ const MapView = forwardRef(function MapView({ visible, selected, pin, mode, onMa
       return;
     }
     const html = '<div style="position:relative;width:34px;height:34px;display:flex;align-items:center;justify-content:center">'
-      + '<div style="position:absolute;inset:6px;border-radius:99px;background:#8b7bff;animation:pmPulse 2s ease-out infinite"></div>'
-      + '<div style="position:relative;width:20px;height:20px;border-radius:99px;background:linear-gradient(130deg,#35e0c0,#8b7bff);border:2.5px solid #fff;box-shadow:0 6px 18px rgba(0,0,0,.6)"></div></div>';
+      + '<div style="position:absolute;inset:6px;border-radius:99px;background:#8355c9;animation:pmPulse 2s ease-out infinite"></div>'
+      + '<div style="position:relative;width:20px;height:20px;border-radius:99px;background:linear-gradient(130deg,#1f9d64,#8355c9);border:2.5px solid #fff;box-shadow:0 6px 18px rgba(0,0,0,.6)"></div></div>';
     if (pinMarker.current) pinMarker.current.setLatLng(pin);
     else pinMarker.current = L.marker(pin, { icon: L.divIcon({ className: '', iconSize: [34, 34], iconAnchor: [17, 17], html }), zIndexOffset: 2000 }).addTo(map);
   }, [pin, mode]);

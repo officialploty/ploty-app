@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import { band } from './utils';
 
-const TILE_URL = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+const TILE_URL = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
 
 export default function MiniMap({ lat, lng, ppsf, style }) {
   const containerRef = useRef(null);
@@ -22,5 +22,5 @@ export default function MiniMap({ lat, lng, ppsf, style }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lat, lng]);
 
-  return <div ref={containerRef} style={{ background: '#12141f', ...style }} />;
+  return <div ref={containerRef} style={{ background: '#eef1ef', ...style }} />;
 }

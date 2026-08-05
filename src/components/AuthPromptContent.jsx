@@ -10,19 +10,19 @@ export default function AuthPromptContent({ pm }) {
 
   return (
     <div style={{ padding: '10px 22px 26px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div style={{ width: 44, height: 44, borderRadius: 14, background: 'linear-gradient(130deg,#35e0c0,#8b7bff)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: 16, height: 16, borderRadius: 99, border: '2px solid #0d1018' }} />
+      <div style={{ width: 44, height: 44, borderRadius: 14, background: 'linear-gradient(130deg,#1f9d64,#8355c9)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 16, height: 16, borderRadius: 99, border: '2px solid #ffffff' }} />
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <div style={{ font: '800 20px/1.25 Manrope', color: '#fff', letterSpacing: '-.01em' }}>{copy.title}</div>
-        <div style={{ font: '400 13px/1.55 Manrope', color: 'rgba(255,255,255,.55)' }}>{copy.body}</div>
+        <div style={{ font: '800 20px/1.25 Manrope', color: '#1a1e1c', letterSpacing: '-.01em' }}>{copy.title}</div>
+        <div style={{ font: '400 13px/1.55 Manrope', color: '#6b7570' }}>{copy.body}</div>
       </div>
 
       <div
         onClick={pm.loginWithGoogle}
         style={{
           height: 52, borderRadius: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-          background: '#fff', cursor: 'pointer',
+          background: '#ffffff', border: '1px solid #e5e9e6', cursor: 'pointer',
         }}
       >
         <GoogleGlyph />
@@ -30,7 +30,7 @@ export default function AuthPromptContent({ pm }) {
       </div>
 
       <div onClick={pm.cancelAuthPrompt} style={{ textAlign: 'center', cursor: 'pointer' }}>
-        <span style={{ font: '700 13px/1 Manrope', color: 'rgba(255,255,255,.4)' }}>Maybe later</span>
+        <span style={{ font: '700 13px/1 Manrope', color: '#8a958f' }}>Maybe later</span>
       </div>
     </div>
   );

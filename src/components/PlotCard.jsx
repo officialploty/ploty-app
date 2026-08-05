@@ -1,8 +1,13 @@
 import { listCardFields } from '../fields';
 
-const BLUE = '#35c8e0';
-const GREEN = '#35e0c0';
-const PURPLE = '#8b7bff';
+const GREEN = '#1f9d64';
+const GREEN_DARK = '#16281f';
+const BLUE = '#3d7fd9';
+const PURPLE = '#8355c9';
+const AMBER = '#d98a1f';
+const RED = '#d64545';
+const INK = '#1a1e1c';
+const SUB = '#6b7570';
 
 export default function PlotCard({ p, onClick, saved, onToggleSave, onShare }) {
   const f = listCardFields(p);
@@ -14,14 +19,14 @@ export default function PlotCard({ p, onClick, saved, onToggleSave, onShare }) {
     <div
       onClick={onClick}
       style={{
-        borderRadius: 18, padding: 11, background: 'rgba(30,33,64,.55)', border: '1px solid rgba(255,255,255,.09)',
-        cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 10,
+        borderRadius: 18, padding: 11, background: '#ffffff', border: '1px solid #e8ece9',
+        boxShadow: '0 2px 10px rgba(22,40,31,.06)', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 10,
       }}
     >
       <div style={{
         position: 'relative', borderRadius: 13, overflow: 'hidden', aspectRatio: '16/7.2',
-        background: f.thumbBg || 'rgba(255,255,255,.05)', backgroundSize: 'cover', backgroundPosition: 'center',
-        border: '1px solid rgba(255,255,255,.09)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: f.thumbBg || '#f2f5f3', backgroundSize: 'cover', backgroundPosition: 'center',
+        border: '1px solid #e8ece9', display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
         {!f.thumbBg && <ImageIcon />}
 
@@ -35,7 +40,7 @@ export default function PlotCard({ p, onClick, saved, onToggleSave, onShare }) {
         </div>
 
         {f.mediaBadge && (
-          <div style={{ position: 'absolute', left: 8, bottom: 8, display: 'flex', alignItems: 'center', gap: 3, padding: '3px 7px', borderRadius: 6, background: 'rgba(10,11,18,.72)' }}>
+          <div style={{ position: 'absolute', left: 8, bottom: 8, display: 'flex', alignItems: 'center', gap: 3, padding: '3px 7px', borderRadius: 6, background: 'rgba(20,24,22,.68)' }}>
             <PhotoIcon />
             <span style={{ font: '700 8.5px/1 Manrope', color: '#fff' }}>{f.mediaBadge} PHOTO{f.mediaBadge === '1' ? '' : 'S'}</span>
           </div>
@@ -43,51 +48,51 @@ export default function PlotCard({ p, onClick, saved, onToggleSave, onShare }) {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <div style={{ font: '700 14.5px/1.25 Manrope', color: '#fff', letterSpacing: '-.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.locality}</div>
+        <div style={{ font: '700 14.5px/1.25 Manrope', color: INK, letterSpacing: '-.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.locality}</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <PinIcon />
-            <span style={{ font: '600 10.5px/1.3 Manrope', color: PURPLE, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.cityLine}</span>
+            <span style={{ font: '600 10.5px/1.3 Manrope', color: GREEN, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.cityLine}</span>
           </div>
-          <span style={{ width: 1, height: 10, background: 'rgba(255,255,255,.15)' }} />
+          <span style={{ width: 1, height: 10, background: '#e0e4e1' }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <ClockIcon />
-            <span style={{ font: '600 9.5px/1.3 Manrope', color: 'rgba(255,255,255,.45)' }}>{f.age}</span>
+            <span style={{ font: '600 9.5px/1.3 Manrope', color: SUB }}>{f.age}</span>
           </div>
         </div>
       </div>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'stretch', gap: 0, borderRadius: 12, background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.07)', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'stretch', gap: 0, borderRadius: 12, background: '#f6f9f7', border: '1px solid #e8ece9', overflow: 'hidden' }}>
         <div style={{ flex: '1 1 128px', minWidth: 128, display: 'flex', alignItems: 'center', gap: 8, padding: '7px 11px' }}>
-          <div style={{ width: 28, height: 28, borderRadius: 99, flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid ' + f.color }}>
-            <RulerIcon color={f.color} size={13} />
+          <div style={{ width: 28, height: 28, borderRadius: 99, flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#e5f5ec', border: '1.5px solid ' + GREEN }}>
+            <RulerIcon color={GREEN} size={13} />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-            <span style={{ font: '700 7.5px/1.2 Manrope', color: 'rgba(255,255,255,.5)', letterSpacing: '.07em' }}>PER SQFT</span>
+            <span style={{ font: '700 7.5px/1.2 Manrope', color: SUB, letterSpacing: '.07em' }}>PER SQFT</span>
             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {f.ppsfPrefix && <span style={{ font: '700 9.5px/1.25 Manrope', color: 'rgba(255,255,255,.55)' }}>{f.ppsfPrefix} </span>}
-              <span style={{ font: '800 18px/1.25 Manrope', color: f.color, letterSpacing: '-.01em' }}>{f.ppsfLabel}</span>
+              {f.ppsfPrefix && <span style={{ font: '700 9.5px/1.25 Manrope', color: SUB }}>{f.ppsfPrefix} </span>}
+              <span style={{ font: '800 18px/1.25 Manrope', color: GREEN_DARK, letterSpacing: '-.01em' }}>{f.ppsfLabel}</span>
             </span>
           </div>
         </div>
 
-        <div style={{ flex: '1 1 140px', minWidth: 140, display: 'flex', flexDirection: 'column', gap: 5, justifyContent: 'center', padding: '7px 10px', borderLeft: '1px solid rgba(255,255,255,.1)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '3px 8px 3px 6px', borderRadius: 99, background: '#35e0c0' }}>
-            <ShieldIcon size={9} />
-            <span style={{ font: '800 8.5px/1 Manrope', color: '#08150f', whiteSpace: 'nowrap' }}>DTCP Approved</span>
+        <div style={{ flex: '1 1 140px', minWidth: 140, display: 'flex', flexDirection: 'column', gap: 5, justifyContent: 'center', padding: '7px 10px', borderLeft: '1px solid #e8ece9' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px 3px 6px', borderRadius: 7, background: '#e5f5ec', border: '1px solid #bfe3cf' }}>
+            <ShieldIcon size={9} color={GREEN} />
+            <span style={{ font: '800 8.5px/1 Manrope', color: '#146b41', whiteSpace: 'nowrap', letterSpacing: '.01em' }}>DTCP Approved</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '3px 8px 3px 6px', borderRadius: 99, background: '#8b7bff' }}>
-            <RosetteIcon size={9} />
-            <span style={{ font: '800 8.5px/1 Manrope', color: '#12081f', whiteSpace: 'nowrap' }}>RERA Registered</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px 3px 6px', borderRadius: 7, background: '#f1ecfa', border: '1px solid #d9caf0' }}>
+            <RosetteIcon size={9} color={PURPLE} />
+            <span style={{ font: '800 8.5px/1 Manrope', color: '#5c3a97', whiteSpace: 'nowrap', letterSpacing: '.01em' }}>RERA Registered</span>
           </div>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', borderRadius: 12, background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.07)', overflow: 'hidden' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', borderRadius: 12, background: '#f6f9f7', border: '1px solid #e8ece9', overflow: 'hidden' }}>
         <MetaStat icon={<RulerSmallIcon color={PURPLE} />} color={PURPLE} label="PLOT SIZE" value={f.plotSizeLabel} />
-        <MetaStat icon={<RupeeIcon color={PURPLE} />} color={PURPLE} label="TOTAL PRICE" value={f.totalPriceLabel} border />
+        <MetaStat icon={<RupeeIcon color={GREEN} />} color={GREEN} label="TOTAL PRICE" value={f.totalPriceLabel} border />
         <MetaStat icon={<PlotsIcon color={BLUE} />} color={BLUE} label="PLOTS" value={f.plotsCountLabel} border />
-        <MetaStat icon={<CarIcon color={GREEN} />} color={GREEN} label="DISTANCE" value={distanceLabel} sub={distanceLandmark} border />
+        <MetaStat icon={<CarIcon color={AMBER} />} color={AMBER} label="DISTANCE" value={distanceLabel} sub={distanceLandmark} border />
       </div>
     </div>
   );
@@ -99,7 +104,8 @@ function IconButton({ children, onClick, active }) {
       onClick={onClick}
       style={{
         width: 26, height: 26, borderRadius: 99, flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: active ? 'rgba(255,107,107,.14)' : 'rgba(255,255,255,.05)', border: '1px solid ' + (active ? 'rgba(255,107,107,.4)' : 'rgba(255,255,255,.12)'), cursor: 'pointer',
+        background: active ? '#fbe9e9' : '#ffffff', border: '1px solid ' + (active ? '#f0c6c6' : '#e8ece9'),
+        boxShadow: '0 1px 4px rgba(22,40,31,.12)', cursor: 'pointer',
       }}
     >
       {children}
@@ -111,14 +117,14 @@ function MetaStat({ icon, color, label, value, sub, border }) {
   return (
     <div style={{
       display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '8px 3px', minWidth: 0,
-      borderLeft: border ? '1px solid rgba(255,255,255,.07)' : 'none',
+      borderLeft: border ? '1px solid #e8ece9' : 'none',
     }}>
-      <div style={{ width: 14, height: 14, borderRadius: 99, background: hexToRgba(color, .16), flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ width: 14, height: 14, borderRadius: 99, background: hexToRgba(color, .14), flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {icon}
       </div>
-      <span style={{ font: '600 6.5px/1.15 Manrope', color: 'rgba(255,255,255,.4)', letterSpacing: '.02em', textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>{label}</span>
-      <span style={{ font: '800 11px/1.2 Manrope', color: '#fff', textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>{value}</span>
-      {sub && <span style={{ font: '600 7px/1.2 Manrope', color: PURPLE, textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>{sub}</span>}
+      <span style={{ font: '600 6.5px/1.15 Manrope', color: SUB, letterSpacing: '.02em', textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>{label}</span>
+      <span style={{ font: '800 11px/1.2 Manrope', color: INK, textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>{value}</span>
+      {sub && <span style={{ font: '600 7px/1.2 Manrope', color, textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>{sub}</span>}
     </div>
   );
 }
@@ -187,16 +193,16 @@ function PinIcon() {
 function ClockIcon() {
   return (
     <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
-      <circle cx="12" cy="12" r="8.5" stroke="rgba(255,255,255,.35)" strokeWidth="1.6" />
-      <path d="M12 7.5V12l3 2" stroke="rgba(255,255,255,.35)" strokeWidth="1.6" strokeLinecap="round" />
+      <circle cx="12" cy="12" r="8.5" stroke="#a3aca6" strokeWidth="1.6" />
+      <path d="M12 7.5V12l3 2" stroke="#a3aca6" strokeWidth="1.6" strokeLinecap="round" />
     </svg>
   );
 }
 
 function HeartIcon({ filled }) {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill={filled ? '#ff6b6b' : 'none'}>
-      <path d="M12 20.5s-7.5-4.6-10-9.3C.5 7.8 2.3 4 6 4c2 0 3.5 1.1 6 3.5C14.5 5.1 16 4 18 4c3.7 0 5.5 3.8 4 7.2-2.5 4.7-10 9.3-10 9.3Z" stroke="#ff3b3b" strokeWidth="1.8" strokeLinejoin="round" />
+    <svg width="14" height="14" viewBox="0 0 24 24" fill={filled ? '#d64545' : 'none'}>
+      <path d="M12 20.5s-7.5-4.6-10-9.3C.5 7.8 2.3 4 6 4c2 0 3.5 1.1 6 3.5C14.5 5.1 16 4 18 4c3.7 0 5.5 3.8 4 7.2-2.5 4.7-10 9.3-10 9.3Z" stroke="#d64545" strokeWidth="1.8" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -204,26 +210,26 @@ function HeartIcon({ filled }) {
 function ShareIcon() {
   return (
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-      <path d="M12 15V4M12 4l-4 4M12 4l4 4" stroke="#ff9a3c" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M5 12v6.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V12" stroke="#ff9a3c" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M12 15V4M12 4l-4 4M12 4l4 4" stroke="#3d7fd9" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M5 12v6.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V12" stroke="#3d7fd9" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   );
 }
 
-function ShieldIcon({ size = 12 }) {
+function ShieldIcon({ size = 12, color = '#d9c896' }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6l7-3Z" stroke="#08150f" strokeWidth="1.8" strokeLinejoin="round" />
-      <path d="M9 12l2 2 4-4.5" stroke="#08150f" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6l7-3Z" stroke={color} strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="M9 12l2 2 4-4.5" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
 
-function RosetteIcon({ size = 12 }) {
+function RosetteIcon({ size = 12, color = '#d9c896' }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <circle cx="12" cy="9" r="6" stroke="#12081f" strokeWidth="1.8" />
-      <path d="M9 14.5 7.5 21l4.5-2.5 4.5 2.5-1.5-6.5" stroke="#12081f" strokeWidth="1.8" strokeLinejoin="round" />
+      <circle cx="12" cy="9" r="6" stroke={color} strokeWidth="1.8" />
+      <path d="M9 14.5 7.5 21l4.5-2.5 4.5 2.5-1.5-6.5" stroke={color} strokeWidth="1.8" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -251,10 +257,10 @@ function PhotoIcon() {
 
 function ImageIcon() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" opacity=".28">
-      <rect x="3" y="4" width="18" height="16" rx="2.5" stroke="#fff" strokeWidth="1.6" />
-      <circle cx="8.5" cy="9.5" r="1.6" stroke="#fff" strokeWidth="1.6" />
-      <path d="M4 16.5 8.5 12l3 3 4-4.5L21 15" stroke="#fff" strokeWidth="1.6" />
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" opacity=".45">
+      <rect x="3" y="4" width="18" height="16" rx="2.5" stroke="#8a9691" strokeWidth="1.6" />
+      <circle cx="8.5" cy="9.5" r="1.6" stroke="#8a9691" strokeWidth="1.6" />
+      <path d="M4 16.5 8.5 12l3 3 4-4.5L21 15" stroke="#8a9691" strokeWidth="1.6" />
     </svg>
   );
 }
