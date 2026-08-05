@@ -36,6 +36,11 @@ create policy "landmarks are publicly readable"
   on public.landmarks for select
   using (true);
 
+-- RLS policies only gate which rows a role can see — the role still
+-- needs the base table-level privilege first, which isn't implied by
+-- "enable row level security" or a permissive policy.
+grant select on public.landmarks to anon, authenticated;
+
 create policy "staff can maintain landmarks"
   on public.landmarks for all
   to authenticated
@@ -69,6 +74,8 @@ alter table public.listing_landmarks enable row level security;
 create policy "listing landmarks are publicly readable"
   on public.listing_landmarks for select
   using (true);
+
+grant select on public.listing_landmarks to anon, authenticated;
 
 
 -- ============================================================
