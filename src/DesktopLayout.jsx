@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import MapView from './MapView';
 import SearchBar from './components/SearchBar';
 import ListPanel from './components/ListPanel';
@@ -15,6 +15,12 @@ import { NearbyWarning, PinControls } from './components/PlacingControls';
 export default function DesktopLayout({ pm }) {
   const mapRef = useRef(null);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [mapBounds, setMapBounds] = useState(null);
+
+  const inView = useMemo(() => {
+    if (!mapBounds) return pm.visible;
+    return pm.visible.filter((p) => p.lat <= mapBounds.north && p.lat >= mapBounds.south && p.lng <= mapBounds.east && p.lng >= mapBounds.west);
+  }, [pm.visible, mapBounds]);
 
   const crosshairOn = pm.placing && !pm.pin;
   const ly = pm.visible.filter((p) => p.kind === 'layout').length;
@@ -61,7 +67,7 @@ export default function DesktopLayout({ pm }) {
         <>
           {filterOpen && <FilterSidebar pm={pm} mapRef={mapRef} onClose={() => setFilterOpen(false)} />}
           <div className="pmScroll" style={{ width: 400, flex: 'none', borderRight: '1px solid #e5e9e6', overflowY: 'auto', background: '#f4f7f5' }}>
-            <ListPanel pm={pm} filterOpen={filterOpen} onToggleFilter={() => setFilterOpen((v) => !v)} />
+            <ListPanel pm={pm} items={inView} inMapView={!!mapBounds} filterOpen={filterOpen} onToggleFilter={() => setFilterOpen((v) => !v)} />
           </div>
         </>
       ) : (
@@ -119,6 +125,7 @@ export default function DesktopLayout({ pm }) {
           onMarkerClick={(id) => pm.open(id, (p) => mapRef.current && mapRef.current.flyTo([p.lat, p.lng], 13.5))}
           onMapClick={(lat, lng) => { if (pm.mode === 'placing') pm.setPin([lat, lng]); }}
           onMapDeselect={() => { pm.setCityMenu(false); pm.setAreaMenu(false); pm.setFocus(false); }}
+          onBoundsChange={setMapBounds}
         />
 
         {crosshairOn && (

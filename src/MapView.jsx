@@ -23,13 +23,15 @@ function markerHtml(p, sel) {
   };
 }
 
-const MapView = forwardRef(function MapView({ visible, selected, pin, mode, onMarkerClick, onMapClick, onMapDeselect }, ref) {
+const MapView = forwardRef(function MapView({ visible, selected, pin, mode, onMarkerClick, onMapClick, onMapDeselect, onBoundsChange }, ref) {
   const containerRef = useRef(null);
   const mapObj = useRef(null);
   const markers = useRef({});
   const pinMarker = useRef(null);
   const onMapClickRef = useRef(onMapClick);
   onMapClickRef.current = onMapClick;
+  const onBoundsChangeRef = useRef(onBoundsChange);
+  onBoundsChangeRef.current = onBoundsChange;
 
   useImperativeHandle(ref, () => ({
     flyTo(center, zoom) { mapObj.current && mapObj.current.flyTo(center, zoom, { duration: 0.9 }); },
@@ -50,6 +52,13 @@ const MapView = forwardRef(function MapView({ visible, selected, pin, mode, onMa
     map.on('click', (e) => {
       if (onMapClickRef.current) onMapClickRef.current(e.latlng.lat, e.latlng.lng);
     });
+    const reportBounds = () => {
+      if (!onBoundsChangeRef.current) return;
+      const b = map.getBounds();
+      onBoundsChangeRef.current({ north: b.getNorth(), south: b.getSouth(), east: b.getEast(), west: b.getWest() });
+    };
+    map.on('moveend', reportBounds);
+    reportBounds();
     return () => { map.remove(); mapObj.current = null; markers.current = {}; pinMarker.current = null; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

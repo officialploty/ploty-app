@@ -2,8 +2,9 @@ import PlotCard from './PlotCard';
 
 const sortLabels = { new: 'Newest', low: 'Price ↑', high: 'Price ↓' };
 
-export default function ListPanel({ pm, filterOpen, onToggleFilter }) {
-  const { visible, city, area, sort, setSort, kindFilter, ppsfRange, totalPriceRange, sqftRange, open, saved, toggleSave, shareListing } = pm;
+export default function ListPanel({ pm, filterOpen, onToggleFilter, items, inMapView }) {
+  const { city, area, sort, setSort, kindFilter, ppsfRange, totalPriceRange, sqftRange, open, saved, toggleSave, shareListing } = pm;
+  const visible = items || pm.visible;
 
   const activeCount = (kindFilter !== 'all' ? 1 : 0) + (area !== 'All areas' ? 1 : 0)
     + (ppsfRange ? 1 : 0) + (totalPriceRange ? 1 : 0) + (sqftRange ? 1 : 0);
@@ -14,7 +15,7 @@ export default function ListPanel({ pm, filterOpen, onToggleFilter }) {
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 'none' }}>
             <div style={{ font: '800 22px/1 Manrope', color: '#1a1e1c', letterSpacing: '-.02em' }}>{visible.length} plots</div>
-            <div style={{ font: '500 12px/1 Manrope', color: '#6b7570' }}>{city + ' · ' + area}</div>
+            <div style={{ font: '500 12px/1 Manrope', color: '#6b7570' }}>{inMapView ? 'In this map view' : city + ' · ' + area}</div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
             <div
