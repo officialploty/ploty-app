@@ -5,6 +5,7 @@
 
 import { withSupabase } from "@supabase/server";
 import { attachAmenities } from "../_shared/amenities.ts";
+import { refineListingDistances } from "../_shared/landmarks.ts";
 
 export default {
   fetch: withSupabase({ auth: "user" }, async (req, ctx) => {
@@ -54,6 +55,15 @@ export default {
       const amenityErr = await attachAmenities(ctx.supabase, "plot", plot.id, amenities);
       if (amenityErr) console.error("amenity tagging failed:", amenityErr);
     }
+
+    // deferred: DB trigger already wrote straight-line candidates before this
+    // insert returned; refine them to real distance/time after responding.
+    // Call unconditionally first — optional-chaining on EdgeRuntime would
+    // otherwise short-circuit the whole expression (including this call)
+    // if the global doesn't exist, silently skipping refinement entirely.
+    const distancePromise = refineListingDistances("plot", plot.id, lat, lng);
+    // deno-lint-ignore no-explicit-any
+    (globalThis as any).EdgeRuntime?.waitUntil(distancePromise);
 
     return Response.json({ plot, nearby_warning: nearby?.length ? nearby : null }, { status: 201 });
   }),

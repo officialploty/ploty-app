@@ -16,6 +16,7 @@ export default function DesktopLayout({ pm }) {
   const mapRef = useRef(null);
   const [filterOpen, setFilterOpen] = useState(false);
   const [mapBounds, setMapBounds] = useState(null);
+  const [mapVisible, setMapVisible] = useState(true);
 
   const inView = useMemo(() => {
     if (!mapBounds) return pm.visible;
@@ -66,8 +67,11 @@ export default function DesktopLayout({ pm }) {
       {listing ? (
         <>
           {filterOpen && <FilterSidebar pm={pm} mapRef={mapRef} onClose={() => setFilterOpen(false)} />}
-          <div className="pmScroll" style={{ width: 400, flex: 'none', borderRight: '1px solid #e5e9e6', overflowY: 'auto', background: '#f4f7f5' }}>
-            <ListPanel pm={pm} items={inView} inMapView={!!mapBounds} filterOpen={filterOpen} onToggleFilter={() => setFilterOpen((v) => !v)} />
+          <div className="pmScroll" style={{ width: mapVisible ? 400 : '100%', flex: mapVisible ? 'none' : 1, borderRight: mapVisible ? '1px solid #e5e9e6' : 'none', overflowY: 'auto', background: '#f4f7f5' }}>
+            <ListPanel
+              pm={pm} items={inView} inMapView={mapVisible && !!mapBounds} filterOpen={filterOpen}
+              onToggleFilter={() => setFilterOpen((v) => !v)} mapVisible={mapVisible} onToggleMap={() => setMapVisible((v) => !v)}
+            />
           </div>
         </>
       ) : (
@@ -115,7 +119,7 @@ export default function DesktopLayout({ pm }) {
         </div>
       )}
 
-      <div style={{ position: 'relative', flex: 1, background: '#eef1ef', isolation: 'isolate' }}>
+      <div style={{ position: 'relative', flex: listing && !mapVisible ? 'none' : 1, width: listing && !mapVisible ? 0 : undefined, overflow: 'hidden', background: '#eef1ef', isolation: 'isolate' }}>
         <MapView
           ref={mapRef}
           visible={pm.visible}

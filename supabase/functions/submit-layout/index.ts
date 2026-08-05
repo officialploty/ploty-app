@@ -5,6 +5,7 @@
 
 import { withSupabase } from "@supabase/server";
 import { attachAmenities } from "../_shared/amenities.ts";
+import { refineListingDistances } from "../_shared/landmarks.ts";
 
 export default {
   fetch: withSupabase({ auth: "user" }, async (req, ctx) => {
@@ -54,6 +55,13 @@ export default {
       const amenityErr = await attachAmenities(ctx.supabase, "layout", layout.id, amenities);
       if (amenityErr) console.error("amenity tagging failed:", amenityErr);
     }
+
+    // Call unconditionally first — optional-chaining on EdgeRuntime would
+    // otherwise short-circuit the whole expression (including this call)
+    // if the global doesn't exist, silently skipping refinement entirely.
+    const distancePromise = refineListingDistances("layout", layout.id, lat, lng);
+    // deno-lint-ignore no-explicit-any
+    (globalThis as any).EdgeRuntime?.waitUntil(distancePromise);
 
     return Response.json({ layout }, { status: 201 });
   }),

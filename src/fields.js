@@ -2,7 +2,10 @@ import { band, inr, kShort, ppsfLabel, sqftRange } from './utils';
 
 export function listCardFields(p) {
   const isLayout = p.kind === 'layout';
-  const nearest = (p.landmarks || []).find((l) => l.category === 'connectivity') || (p.landmarks || [])[0] || null;
+  // p.landmarks is already ranked by importance (category weight + distance)
+  // server-side, not just nearest-first — see sync_listing_landmarks in
+  // supabase/sql/landmarks.sql — so rank 1 is the right "headline" pick.
+  const nearest = (p.landmarks || [])[0] || null;
   return {
     id: p.id,
     locality: p.locality,

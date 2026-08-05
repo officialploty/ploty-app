@@ -3,7 +3,15 @@
 --
 -- Adds a curated master landmark database plus a join table that stores,
 -- for every plot/layout, the 10 nearest landmarks with a precomputed
--- distance and estimated drive time. This is NOT live data — the
+-- distance and estimated drive time. sync_listing_landmarks() writes up to
+-- 35 straight-line candidates first (top 5 per category, cheap, instant,
+-- never blank) — per-category, not a single global top-N, because
+-- high-weight categories like connectivity (roads/metro, weight 5) can
+-- otherwise dominate every slot and starve healthcare/education/etc out of
+-- the candidate pool entirely. An Ola Maps Distance Matrix call then
+-- refines those candidates to real routable distance/time and trims to the
+-- final 10 (capped at 3/category) — see
+-- supabase/functions/_shared/landmarks.ts. This is NOT live data — the
 -- landmark list is maintained by hand every 6-12 months, and the
 -- per-listing distances are computed once (via trigger) whenever a
 -- listing's location is set or changed.
@@ -24,6 +32,27 @@ create table public.landmarks (
   lng double precision generated always as (ST_X(location::geometry)) stored,
   city text not null,
   priority integer not null default 0,
+  -- category-tier importance (1-5), NOT the same as `priority` above (which
+  -- ranks landmarks against others of the same type). This is what lets a
+  -- highway 3km away outrank a mall 200m away when picking the "headline"
+  -- landmark for a listing — derived from icon since that already encodes
+  -- the subtype (road/metro/airport vs school/mall/etc).
+  weight integer generated always as (
+    case icon
+      when '🚗' then 5  -- roads & highways
+      when '🚇' then 5  -- metro
+      when '✈️' then 5  -- airport
+      when '🚆' then 4  -- railway
+      when '🚌' then 4  -- bus terminal
+      when '🏢' then 4  -- employment / IT park
+      when '🎓' then 3  -- education
+      when '🏥' then 3  -- healthcare
+      when '🛍' then 2  -- shopping
+      when '🌳' then 2  -- recreation
+      when '🏛' then 2  -- civic
+      else 3
+    end
+  ) stored,
   created_at timestamptz not null default now()
 );
 
@@ -40,6 +69,10 @@ create policy "landmarks are publicly readable"
 -- needs the base table-level privilege first, which isn't implied by
 -- "enable row level security" or a permissive policy.
 grant select on public.landmarks to anon, authenticated;
+
+-- service_role bypasses RLS but still needs this explicit grant — see the
+-- longer note next to the matching grant on listing_landmarks below.
+grant select on public.landmarks to service_role;
 
 create policy "staff can maintain landmarks"
   on public.landmarks for all
@@ -77,12 +110,35 @@ create policy "listing landmarks are publicly readable"
 
 grant select on public.listing_landmarks to anon, authenticated;
 
+-- service_role bypasses RLS but still needs an explicit table grant —
+-- Supabase's default privilege wiring doesn't automatically extend to
+-- tables created via manual SQL (as opposed to the managed migration
+-- pipeline). Needed by refineListingDistances() in the Edge Function
+-- layer, which writes real Ola Maps distances back after the DB trigger's
+-- straight-line pass — see supabase/functions/_shared/landmarks.ts.
+grant select, update, delete on public.listing_landmarks to service_role;
+
 
 -- ============================================================
--- SYNC FUNCTION — recomputes the top 10 nearest landmarks for one listing
+-- SYNC FUNCTION — recomputes the top-5-per-category candidate landmarks
+-- for one listing (straight-line only; refineListingDistances() in the
+-- Edge Function layer narrows this to the final 10 using real Ola Maps
+-- drive distance/time).
 -- security definer: owners can't write listing_landmarks directly (it's
 -- read-only via RLS), so this runs as the table owner, the same way
 -- handle_new_user() bypasses RLS on profiles.
+--
+-- Ranking isn't pure distance — a highway 3km away is a more useful thing
+-- to show a buyer than a mall 200m away. Each category tier (`weight`,
+-- 2-5) is worth 10 score points, so one tier of difference outweighs up
+-- to a 10km gap in distance before proximity wins out. Rank 1 (the
+-- highest-scoring row) is what the listing card features as its headline
+-- landmark — see listCardFields() in fields.js. Candidates are picked top-5
+-- PER CATEGORY (not one global top-N) — a single global ranking lets
+-- high-weight categories like connectivity (roads/metro, weight 5) sweep
+-- every slot and starve out healthcare/education/shopping/etc entirely,
+-- which then breaks the Edge Function's per-category cap downstream since
+-- it has nothing but one category to choose from.
 -- ============================================================
 
 create or replace function public.sync_listing_landmarks(
@@ -101,14 +157,23 @@ begin
   select
     p_owner_type,
     p_owner_id,
-    l.id,
-    row_number() over (order by ST_Distance(l.location, ST_SetSRID(ST_MakePoint(p_lng, p_lat), 4326)::geography)),
-    round((ST_Distance(l.location, ST_SetSRID(ST_MakePoint(p_lng, p_lat), 4326)::geography) / 1000)::numeric, 1),
+    candidates.id,
+    row_number() over (order by candidates.score desc),
+    round(candidates.distance_km::numeric, 1),
     -- rough urban drive-time estimate: 28 km/h average, minimum 1 minute
-    greatest(1, round((ST_Distance(l.location, ST_SetSRID(ST_MakePoint(p_lng, p_lat), 4326)::geography) / 1000) / 28 * 60)::int)
-  from public.landmarks l
-  order by ST_Distance(l.location, ST_SetSRID(ST_MakePoint(p_lng, p_lat), 4326)::geography) asc
-  limit 10;
+    greatest(1, round(candidates.distance_km / 28 * 60)::int)
+  from (
+    select
+      l.id,
+      (ST_Distance(l.location, ST_SetSRID(ST_MakePoint(p_lng, p_lat), 4326)::geography) / 1000) as distance_km,
+      (l.weight * 10 - (ST_Distance(l.location, ST_SetSRID(ST_MakePoint(p_lng, p_lat), 4326)::geography) / 1000)) as score,
+      row_number() over (
+        partition by l.category
+        order by (l.weight * 10 - (ST_Distance(l.location, ST_SetSRID(ST_MakePoint(p_lng, p_lat), 4326)::geography) / 1000)) desc
+      ) as category_rank
+    from public.landmarks l
+  ) candidates
+  where candidates.category_rank <= 5;
 end;
 $$;
 

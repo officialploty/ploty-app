@@ -74,7 +74,7 @@ export default function MobileLayout({ pm }) {
             <SearchBar pm={pm} light />
           </div>
           <div style={{ flex: 1, minHeight: 0 }}>
-            <ListPanel pm={pm} />
+            <ListPanel pm={pm} mapVisible={false} onToggleMap={() => { pm.setTab('map'); pm.setFocus(false); }} />
           </div>
         </div>
       )}
