@@ -84,7 +84,7 @@ create or replace function public.sync_listing_landmarks(
 returns void
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 begin
   delete from public.listing_landmarks
@@ -117,7 +117,7 @@ create function public.trg_sync_plot_landmarks()
 returns trigger
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 begin
   perform public.sync_listing_landmarks('plot', new.id, ST_Y(new.location::geometry), ST_X(new.location::geometry));
@@ -133,7 +133,7 @@ create function public.trg_sync_layout_landmarks()
 returns trigger
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 begin
   perform public.sync_listing_landmarks('layout', new.id, ST_Y(new.location::geometry), ST_X(new.location::geometry));
