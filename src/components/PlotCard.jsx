@@ -47,15 +47,17 @@ export default function PlotCard({ p, onClick, saved, onToggleSave, onShare }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         <div style={{ font: '700 14.5px/1.25 Manrope', color: INK, letterSpacing: '-.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.locality}</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 7 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
             <PinIcon />
             <span style={{ font: '600 10.5px/1.3 Manrope', color: GREEN, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.cityLine}</span>
           </div>
-          <span style={{ width: 1, height: 10, background: '#e0e4e1' }} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <ClockIcon />
-            <span style={{ font: '600 9.5px/1.3 Manrope', color: SUB }}>{f.age}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7, flex: 'none' }}>
+            <span style={{ width: 1, height: 10, background: '#e0e4e1' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <ClockIcon />
+              <span style={{ font: '600 9.5px/1.3 Manrope', color: SUB, whiteSpace: 'nowrap' }}>{f.age}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -75,14 +77,22 @@ export default function PlotCard({ p, onClick, saved, onToggleSave, onShare }) {
         </div>
 
         <div style={{ flex: '1 1 140px', minWidth: 140, display: 'flex', flexDirection: 'column', gap: 5, justifyContent: 'center', padding: '7px 10px', borderLeft: '1px solid #e8ece9' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px 3px 6px', borderRadius: 7, background: '#e5f5ec', border: '1px solid #bfe3cf' }}>
-            <ShieldIcon size={9} color={GREEN} />
-            <span style={{ font: '800 8.5px/1 Manrope', color: '#146b41', whiteSpace: 'nowrap', letterSpacing: '.01em' }}>DTCP Approved</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px 3px 6px', borderRadius: 7, background: '#f1ecfa', border: '1px solid #d9caf0' }}>
-            <RosetteIcon size={9} color={PURPLE} />
-            <span style={{ font: '800 8.5px/1 Manrope', color: '#5c3a97', whiteSpace: 'nowrap', letterSpacing: '.01em' }}>RERA Registered</span>
-          </div>
+          {f.isApproved ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px 3px 6px', borderRadius: 7, background: '#e5f5ec', border: '1px solid #bfe3cf' }}>
+              <ShieldIcon size={9} color={GREEN} />
+              <span style={{ font: '800 8.5px/1 Manrope', color: '#146b41', whiteSpace: 'nowrap', letterSpacing: '.01em', overflow: 'hidden', textOverflow: 'ellipsis' }}>Approved · {f.approvalNumber}</span>
+            </div>
+          ) : f.isLayout ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px 3px 6px', borderRadius: 7, background: '#fdf1de', border: '1px solid #f0d9a8' }}>
+              <ShieldIcon size={9} color="#b8790f" />
+              <span style={{ font: '800 8.5px/1 Manrope', color: '#8a5c0f', whiteSpace: 'nowrap', letterSpacing: '.01em' }}>Approval not stated</span>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px 3px 6px', borderRadius: 7, background: '#f1ecfa', border: '1px solid #d9caf0' }}>
+              <RosetteIcon size={9} color={PURPLE} />
+              <span style={{ font: '800 8.5px/1 Manrope', color: '#5c3a97', whiteSpace: 'nowrap', letterSpacing: '.01em' }}>Community Listed · unverified</span>
+            </div>
+          )}
         </div>
       </div>
 

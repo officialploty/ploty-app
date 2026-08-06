@@ -24,6 +24,13 @@ export function listCardFields(p) {
     age: p.days === 1 ? 'Listed yesterday' : 'Listed ' + p.days + ' days ago',
     distanceLabel: nearest ? nearest.distanceKm + ' km' : '—',
     distanceLandmark: nearest ? nearest.name : 'No data yet',
+    // Real backend field, not a guess — layouts.approval_number, defaulted to
+    // 'Not stated' when absent (see mapDbLayout in usePlotMap.js). Individual
+    // plots have no approval field at all — they're community-listed and
+    // explicitly unverified (see trustText in detailFields below), so there's
+    // nothing to show a badge for.
+    isApproved: isLayout && !!p.approval && p.approval !== 'Not stated',
+    approvalNumber: isLayout ? p.approval : null,
   };
 }
 
