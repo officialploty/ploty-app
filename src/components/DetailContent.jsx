@@ -150,7 +150,7 @@ export default function DetailContent({ sel, saved, onToggleSave, onContact }) {
                   <div key={l.name} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 13px', borderRadius: 99, background: '#f6f9f7', border: '1px solid #e8ece9', font: '600 11.5px/1 Manrope', color: '#1a1e1c' }}>
                     <span style={{ fontSize: 12 }}>{l.icon}</span>
                     {l.name}
-                    <span style={{ color: '#8a958f', fontWeight: 500 }}>· {l.distanceKm} km</span>
+                    <span style={{ color: '#8a958f', fontWeight: 500 }}>· {l.distanceKm} km · {l.driveTimeMin} min</span>
                   </div>
                 ))}
               </div>
