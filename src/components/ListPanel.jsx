@@ -46,12 +46,12 @@ export default function ListPanel({ pm, filterOpen, onToggleFilter, items, inMap
           </div>
         </div>
       </div>
-      <div className="pmScroll" style={{ flex: 1, overflowY: 'auto', padding: '14px 18px 30px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div className="pmScroll" style={{ flex: 1, overflowY: 'auto', padding: '14px 18px 30px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 340px))', gap: 12, alignContent: 'start' }}>
         {visible.map((p) => (
           <PlotCard key={p.id} p={p} onClick={() => open(p.id)} saved={saved} onToggleSave={toggleSave} onShare={shareListing} />
         ))}
         {visible.length === 0 && (
-          <div style={{ padding: '40px 10px', textAlign: 'center', font: '500 13px/1.6 Manrope', color: '#8a958f' }}>Nothing here yet. Widen the filters, or be the first to register a plot in this area.</div>
+          <div style={{ gridColumn: '1 / -1', padding: '40px 10px', textAlign: 'center', font: '500 13px/1.6 Manrope', color: '#8a958f' }}>Nothing here yet. Widen the filters, or be the first to register a plot in this area.</div>
         )}
       </div>
     </div>
