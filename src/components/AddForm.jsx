@@ -106,6 +106,60 @@ export default function AddForm({ pm, onBackToPlacing }) {
         </div>
       </div>
 
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={label}>LEGAL APPROVAL <span style={{ color: '#d64545' }}>*</span></div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ font: '600 10.5px/1 Manrope', color: '#8a958f', letterSpacing: '.06em' }}>PLANNING APPROVAL — DTCP OR CMDA</div>
+          <div style={{ display: 'flex', padding: 4, borderRadius: 16, background: '#f6f9f7', border: '1px solid #e5e9e6' }}>
+            {[['dtcp', 'DTCP'], ['cmda', 'CMDA'], ['none', 'None']].map(([val, lbl]) => (
+              <div
+                key={val}
+                onClick={() => setForm('planningApproval', val)}
+                style={{
+                  flex: 1, minHeight: 40, borderRadius: 12, cursor: 'pointer',
+                  background: f.planningApproval === val ? 'linear-gradient(110deg,#1f9d64,#8355c9)' : 'transparent',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '6px 4px',
+                }}
+              >
+                <span style={{ font: '700 12.5px/1 Manrope', color: f.planningApproval === val ? '#ffffff' : '#495650' }}>{lbl}</span>
+              </div>
+            ))}
+          </div>
+          {(f.planningApproval === 'dtcp' || f.planningApproval === 'cmda') && (
+            <input
+              value={f.planningApprovalNumber} onChange={(e) => setForm('planningApprovalNumber', e.target.value)}
+              placeholder="Approval number (optional)" style={fieldStyle}
+            />
+          )}
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ font: '600 10.5px/1 Manrope', color: '#8a958f', letterSpacing: '.06em' }}>RERA STATUS</div>
+          <div style={{ display: 'flex', padding: 4, borderRadius: 16, background: '#f6f9f7', border: '1px solid #e5e9e6' }}>
+            {[['registered', 'Registered'], ['exempted', 'Exempted'], ['not_registered', 'Not Registered']].map(([val, lbl]) => (
+              <div
+                key={val}
+                onClick={() => setForm('reraStatus', val)}
+                style={{
+                  flex: 1, minHeight: 40, borderRadius: 12, cursor: 'pointer',
+                  background: f.reraStatus === val ? 'linear-gradient(110deg,#1f9d64,#8355c9)' : 'transparent',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '6px 4px', textAlign: 'center',
+                }}
+              >
+                <span style={{ font: '700 10.5px/1.2 Manrope', color: f.reraStatus === val ? '#ffffff' : '#495650' }}>{lbl}</span>
+              </div>
+            ))}
+          </div>
+          {f.reraStatus === 'registered' && (
+            <input
+              value={f.reraNumber} onChange={(e) => setForm('reraNumber', e.target.value)}
+              placeholder="RERA number (optional)" style={fieldStyle}
+            />
+          )}
+        </div>
+      </div>
+
       {f.kind === 'plot' && (
         <>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

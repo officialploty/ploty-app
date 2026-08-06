@@ -104,6 +104,15 @@ create table public.plots (
   lng double precision generated always as (ST_X(location::geometry)) stored,
   sqft numeric not null,
   ppsf numeric not null,
+  -- Legal approval status — mandatory at submission (see AddForm.jsx),
+  -- but defaulted here so the column itself can never be null. DTCP and
+  -- CMDA are alternate planning authorities for different areas, never
+  -- both at once, hence one field with three possible values rather than
+  -- two booleans.
+  planning_approval text not null default 'none' check (planning_approval in ('dtcp', 'cmda', 'none')),
+  planning_approval_number text,
+  rera_status text not null default 'not_registered' check (rera_status in ('registered', 'exempted', 'not_registered')),
+  rera_number text,
   amenity_count integer,
   submitted_by uuid references public.profiles(id),
   created_at timestamptz not null default now(),
@@ -155,7 +164,11 @@ create table public.layouts (
   size_max numeric not null,
   ppsf_min numeric not null,
   ppsf_max numeric not null,
-  approval_number text,
+  approval_number text, -- deprecated free-text field, superseded by planning_approval/planning_approval_number below; left in place, not backfilled or read by the app anymore
+  planning_approval text not null default 'none' check (planning_approval in ('dtcp', 'cmda', 'none')),
+  planning_approval_number text,
+  rera_status text not null default 'not_registered' check (rera_status in ('registered', 'exempted', 'not_registered')),
+  rera_number text,
   amenity_count integer,
   status text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
   submitted_by uuid references public.profiles(id),

@@ -118,12 +118,19 @@ export default function DetailContent({ sel, saved, onToggleSave, onContact }) {
         </div>
       )}
 
-      {d.isLayout && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '13px 15px', borderRadius: 16, background: '#f6f9f7', border: '1px solid #e8ece9' }}>
-          <span style={{ font: '600 9.5px/1 Manrope', color: '#6b7570', letterSpacing: '.12em' }}>APPROVAL</span>
-          <span style={{ font: '700 12px/1 Manrope', color: INK }}>{d.approval}</span>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ font: '700 11px/1 Manrope', color: '#6b7570', letterSpacing: '.12em' }}>LEGAL APPROVAL</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 13px', borderRadius: 99, background: d.approval.planning.bg, border: '1px solid ' + d.approval.planning.border }}>
+            <ShieldIcon color={d.approval.planning.color} />
+            <span style={{ font: '700 11.5px/1 Manrope', color: d.approval.planning.color }}>{d.approval.planning.label}</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 13px', borderRadius: 99, background: d.approval.rera.bg, border: '1px solid ' + d.approval.rera.border }}>
+            <ShieldIcon color={d.approval.rera.color} />
+            <span style={{ font: '700 11.5px/1 Manrope', color: d.approval.rera.color }}>{d.approval.rera.label}</span>
+          </div>
         </div>
-      )}
+      </div>
 
       {d.amenities.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
@@ -248,6 +255,14 @@ const AMENITY_ICONS = {
 function AmenityIcon({ name }) {
   const Icon = AMENITY_ICONS[name.toLowerCase()];
   return Icon ? <Icon /> : <TagIcon />;
+}
+
+function ShieldIcon({ color }) {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+      <path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6l7-3Z" stroke={color} strokeWidth="1.8" strokeLinejoin="round" />
+    </svg>
+  );
 }
 
 function PhoneIcon() {

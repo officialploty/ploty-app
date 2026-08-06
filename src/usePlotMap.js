@@ -33,6 +33,8 @@ function mapDbPlot(row) {
     notes: row.notes || 'No additional notes provided by the lister.',
     owner: row.owner || 'Unknown', landmark: row.landmark || 'Pinned by lister',
     contact: row.contact || 'Not shared', days: daysSince(row.created_at),
+    planningApproval: row.planning_approval, planningApprovalNumber: row.planning_approval_number,
+    reraStatus: row.rera_status, reraNumber: row.rera_number,
     amenities: [], media: [], landmarks: [], submittedBy: row.submitted_by, updatedAt: row.updated_at,
   };
 }
@@ -44,7 +46,9 @@ function mapDbLayout(row) {
     ppsf: row.ppsf_min, ppsfMax: row.ppsf_max,
     notes: row.notes || 'No additional notes provided by the developer.',
     owner: row.owner || 'Developer', landmark: row.landmark || 'Pinned by developer',
-    approval: row.approval_number || 'Not stated', contact: row.contact || 'Not shared',
+    contact: row.contact || 'Not shared',
+    planningApproval: row.planning_approval, planningApprovalNumber: row.planning_approval_number,
+    reraStatus: row.rera_status, reraNumber: row.rera_number,
     days: daysSince(row.created_at), amenities: [], media: [], landmarks: [],
     status: row.status, submittedBy: row.submitted_by, updatedAt: row.updated_at,
   };
@@ -98,6 +102,9 @@ async function uploadMedia(ownerType, ownerId, mediaItems, userId, startIndex = 
 const emptyForm = {
   kind: 'plot', locality: '', area: '', priceMode: 'ppsf', price: '', size: '', notes: '', contact: '', media: [], amenities: [],
   plots: '', sizeMin: '', sizeMax: '', ppsfMin: '', ppsfMax: '', company: '',
+  // Empty string, not a valid enum value — forces an explicit choice before
+  // canPublish allows submission, rather than silently defaulting to 'none'.
+  planningApproval: '', planningApprovalNumber: '', reraStatus: '', reraNumber: '',
 };
 
 export function usePlotMap() {
@@ -325,6 +332,10 @@ export function usePlotMap() {
       ppsfMin: listing.kind === 'layout' ? String(listing.ppsf) : '',
       ppsfMax: listing.kind === 'layout' ? String(listing.ppsfMax) : '',
       company: listing.kind === 'layout' ? listing.owner : '',
+      planningApproval: listing.planningApproval || '',
+      planningApprovalNumber: listing.planningApprovalNumber || '',
+      reraStatus: listing.reraStatus || '',
+      reraNumber: listing.reraNumber || '',
     });
     setMode('form');
     setTab('map');
@@ -357,13 +368,17 @@ export function usePlotMap() {
   const derivedPpsf = form.priceMode === 'ppsf' ? price : (size ? price / size : 0);
   const derivedTotal = form.priceMode === 'ppsf' ? price * size : price;
   const fb = band(derivedPpsf || 0);
-  const canPublish = !!pin && !!form.locality.trim() && !!form.area && (form.kind === 'layout'
-    ? num(form.plots) > 0 && num(form.ppsfMin) > 0 && num(form.sizeMin) > 0 && !!form.company.trim()
-    : derivedPpsf > 0 && size > 0);
+  const canPublish = !!pin && !!form.locality.trim() && !!form.area
+    && !!form.planningApproval && !!form.reraStatus
+    && (form.kind === 'layout'
+      ? num(form.plots) > 0 && num(form.ppsfMin) > 0 && num(form.sizeMin) > 0 && !!form.company.trim()
+      : derivedPpsf > 0 && size > 0);
 
   const publish = useCallback(async () => {
     if (!canPublish) {
-      flash(form.kind === 'layout' ? 'Company name, plot count, sizes and price are required' : 'Locality, price and size are required');
+      flash(form.kind === 'layout'
+        ? 'Company name, plot count, sizes, price, and legal approval status are required'
+        : 'Locality, price, size, and legal approval status are required');
       return;
     }
     if (publishing) return;
@@ -382,6 +397,8 @@ export function usePlotMap() {
         owner: form.company.trim(),
         contact: form.contact.trim() || undefined,
         amenities: form.amenities.slice(),
+        planning_approval: form.planningApproval, planning_approval_number: form.planningApprovalNumber.trim() || undefined,
+        rera_status: form.reraStatus, rera_number: form.reraNumber.trim() || undefined,
       };
       try {
         if (editId) {
@@ -417,6 +434,8 @@ export function usePlotMap() {
       owner: auth?.name,
       contact: form.contact.trim() || undefined,
       amenities: form.amenities.slice(),
+      planning_approval: form.planningApproval, planning_approval_number: form.planningApprovalNumber.trim() || undefined,
+      rera_status: form.reraStatus, rera_number: form.reraNumber.trim() || undefined,
     };
     try {
       if (editId) {

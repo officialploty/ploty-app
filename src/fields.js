@@ -1,5 +1,26 @@
 import { band, inr, kShort, ppsfLabel, sqftRange } from './utils';
 
+// Derives the two legal-approval badges from real backend fields
+// (planning_approval, rera_status — mandatory at submission, see
+// AddForm.jsx and validateApproval in the Edge Functions) for both plots
+// and layouts alike. Always shows a definite state either way — approved
+// or not, registered/exempted or not — never a fabricated claim.
+export function approvalBadges(p) {
+  const planning = {
+    dtcp: { label: 'DTCP Approved', color: '#146b41', bg: '#e5f5ec', border: '#bfe3cf' },
+    cmda: { label: 'CMDA Approved', color: '#146b41', bg: '#e5f5ec', border: '#bfe3cf' },
+    none: { label: 'No DTCP or CMDA Approval', color: '#b8790f', bg: '#fdf1de', border: '#f0d9a8' },
+  }[p.planningApproval] || { label: 'Approval not stated', color: '#6b7570', bg: '#f6f9f7', border: '#e5e9e6' };
+
+  const rera = {
+    registered: { label: 'RERA Registered', color: '#146b41', bg: '#e5f5ec', border: '#bfe3cf' },
+    exempted: { label: 'RERA Exempted', color: '#5c3a97', bg: '#f1ecfa', border: '#d9caf0' },
+    not_registered: { label: 'RERA Not Registered', color: '#b8790f', bg: '#fdf1de', border: '#f0d9a8' },
+  }[p.reraStatus] || { label: 'RERA status not stated', color: '#6b7570', bg: '#f6f9f7', border: '#e5e9e6' };
+
+  return { planning, rera };
+}
+
 export function listCardFields(p) {
   const isLayout = p.kind === 'layout';
   // p.landmarks is already ranked by importance (category weight + distance)
@@ -24,13 +45,7 @@ export function listCardFields(p) {
     age: p.days === 1 ? 'Listed yesterday' : 'Listed ' + p.days + ' days ago',
     distanceLabel: nearest ? nearest.distanceKm + ' km' : '—',
     distanceLandmark: nearest ? nearest.name : 'No data yet',
-    // Real backend field, not a guess — layouts.approval_number, defaulted to
-    // 'Not stated' when absent (see mapDbLayout in usePlotMap.js). Individual
-    // plots have no approval field at all — they're community-listed and
-    // explicitly unverified (see trustText in detailFields below), so there's
-    // nothing to show a badge for.
-    isApproved: isLayout && !!p.approval && p.approval !== 'Not stated',
-    approvalNumber: isLayout ? p.approval : null,
+    approval: approvalBadges(p),
   };
 }
 
@@ -46,7 +61,7 @@ export function detailFields(sel) {
     range: isLayout ? kShort(sel.ppsf) + ' – ' + kShort(sel.ppsfMax) : '',
     plotCount: isLayout ? sel.plots + ' plots' : '',
     sizeRange: isLayout ? sqftRange(sel.sizeMin, sel.sizeMax) + ' sqft' : '',
-    approval: isLayout ? (sel.approval || 'Not stated') : '',
+    approval: approvalBadges(sel),
     trustText: isLayout
       ? 'Developer Listed · prices are indicative ranges published by the developer, not verified by Ploty.'
       : 'Community Listed · unverified. Details are submitted by a member, not checked by Ploty.',

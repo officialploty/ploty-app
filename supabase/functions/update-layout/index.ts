@@ -8,6 +8,7 @@
 import { withSupabase } from "@supabase/server";
 import { syncAmenities } from "../_shared/amenities.ts";
 import { refineListingDistances } from "../_shared/landmarks.ts";
+import { validateApproval } from "../_shared/approval.ts";
 
 export default {
   fetch: withSupabase({ auth: "user" }, async (req, ctx) => {
@@ -20,13 +21,15 @@ export default {
 
     const {
       id, locality, city, area, landmark, notes, owner, contact, lat, lng,
-      plot_count, size_min, size_max, ppsf_min, ppsf_max, approval_number,
+      plot_count, size_min, size_max, ppsf_min, ppsf_max,
       amenity_count, amenities,
+      planning_approval, planning_approval_number, rera_status, rera_number,
     } = body as {
       id?: string; locality?: string; city?: string; area?: string; landmark?: string; notes?: string;
       owner?: string; contact?: string; lat?: number; lng?: number;
       plot_count?: number; size_min?: number; size_max?: number; ppsf_min?: number; ppsf_max?: number;
-      approval_number?: string; amenity_count?: number; amenities?: string[];
+      amenity_count?: number; amenities?: string[];
+      planning_approval?: string; planning_approval_number?: string; rera_status?: string; rera_number?: string;
     };
 
     if (
@@ -38,6 +41,9 @@ export default {
         { status: 400 },
       );
     }
+
+    const approvalErr = validateApproval(body);
+    if (approvalErr) return Response.json({ error: approvalErr }, { status: 400 });
 
     const { data: existing, error: fetchErr } = await ctx.supabase
       .from("layouts")
@@ -53,7 +59,8 @@ export default {
       .update({
         locality, city, area, landmark, notes, owner, contact,
         location: `POINT(${lng} ${lat})`,
-        plot_count, size_min, size_max, ppsf_min, ppsf_max, approval_number, amenity_count,
+        plot_count, size_min, size_max, ppsf_min, ppsf_max, amenity_count,
+        planning_approval, planning_approval_number, rera_status, rera_number,
         status: nextStatus,
       })
       .eq("id", id)

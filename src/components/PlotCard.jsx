@@ -77,22 +77,14 @@ export default function PlotCard({ p, onClick, saved, onToggleSave, onShare }) {
         </div>
 
         <div style={{ flex: '1 1 140px', minWidth: 140, display: 'flex', flexDirection: 'column', gap: 5, justifyContent: 'center', padding: '7px 10px', borderLeft: '1px solid #e8ece9' }}>
-          {f.isApproved ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px 3px 6px', borderRadius: 7, background: '#e5f5ec', border: '1px solid #bfe3cf' }}>
-              <ShieldIcon size={9} color={GREEN} />
-              <span style={{ font: '800 8.5px/1 Manrope', color: '#146b41', whiteSpace: 'nowrap', letterSpacing: '.01em', overflow: 'hidden', textOverflow: 'ellipsis' }}>Approved · {f.approvalNumber}</span>
-            </div>
-          ) : f.isLayout ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px 3px 6px', borderRadius: 7, background: '#fdf1de', border: '1px solid #f0d9a8' }}>
-              <ShieldIcon size={9} color="#b8790f" />
-              <span style={{ font: '800 8.5px/1 Manrope', color: '#8a5c0f', whiteSpace: 'nowrap', letterSpacing: '.01em' }}>Approval not stated</span>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px 3px 6px', borderRadius: 7, background: '#f1ecfa', border: '1px solid #d9caf0' }}>
-              <RosetteIcon size={9} color={PURPLE} />
-              <span style={{ font: '800 8.5px/1 Manrope', color: '#5c3a97', whiteSpace: 'nowrap', letterSpacing: '.01em' }}>Community Listed · unverified</span>
-            </div>
-          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px 3px 6px', borderRadius: 7, background: f.approval.planning.bg, border: '1px solid ' + f.approval.planning.border }}>
+            <ShieldIcon size={9} color={f.approval.planning.color} />
+            <span style={{ font: '800 8.5px/1 Manrope', color: f.approval.planning.color, whiteSpace: 'nowrap', letterSpacing: '.01em', overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.approval.planning.label}</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px 3px 6px', borderRadius: 7, background: f.approval.rera.bg, border: '1px solid ' + f.approval.rera.border }}>
+            <RosetteIcon size={9} color={f.approval.rera.color} />
+            <span style={{ font: '800 8.5px/1 Manrope', color: f.approval.rera.color, whiteSpace: 'nowrap', letterSpacing: '.01em', overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.approval.rera.label}</span>
+          </div>
         </div>
       </div>
 

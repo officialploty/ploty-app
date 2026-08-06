@@ -5,6 +5,7 @@
 import { withSupabase } from "@supabase/server";
 import { syncAmenities } from "../_shared/amenities.ts";
 import { refineListingDistances } from "../_shared/landmarks.ts";
+import { validateApproval } from "../_shared/approval.ts";
 
 export default {
   fetch: withSupabase({ auth: "user" }, async (req, ctx) => {
@@ -15,12 +16,15 @@ export default {
       return Response.json({ error: "invalid JSON body" }, { status: 400 });
     }
 
-    const { id, locality, city, area, landmark, notes, owner, contact, lat, lng, sqft, ppsf, amenity_count, amenities } =
-      body as {
-        id?: string; locality?: string; city?: string; area?: string; landmark?: string; notes?: string;
-        owner?: string; contact?: string; lat?: number; lng?: number; sqft?: number; ppsf?: number;
-        amenity_count?: number; amenities?: string[];
-      };
+    const {
+      id, locality, city, area, landmark, notes, owner, contact, lat, lng, sqft, ppsf, amenity_count, amenities,
+      planning_approval, planning_approval_number, rera_status, rera_number,
+    } = body as {
+      id?: string; locality?: string; city?: string; area?: string; landmark?: string; notes?: string;
+      owner?: string; contact?: string; lat?: number; lng?: number; sqft?: number; ppsf?: number;
+      amenity_count?: number; amenities?: string[];
+      planning_approval?: string; planning_approval_number?: string; rera_status?: string; rera_number?: string;
+    };
 
     if (!id || !locality || !city || !area || typeof lat !== "number" || typeof lng !== "number" || !sqft || !ppsf) {
       return Response.json(
@@ -29,12 +33,16 @@ export default {
       );
     }
 
+    const approvalErr = validateApproval(body);
+    if (approvalErr) return Response.json({ error: approvalErr }, { status: 400 });
+
     const { data: plot, error: updateErr } = await ctx.supabase
       .from("plots")
       .update({
         locality, city, area, landmark, notes, owner, contact,
         location: `POINT(${lng} ${lat})`,
         sqft, ppsf, amenity_count,
+        planning_approval, planning_approval_number, rera_status, rera_number,
       })
       .eq("id", id)
       .select()

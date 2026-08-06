@@ -6,6 +6,7 @@
 import { withSupabase } from "@supabase/server";
 import { attachAmenities } from "../_shared/amenities.ts";
 import { refineListingDistances } from "../_shared/landmarks.ts";
+import { validateApproval } from "../_shared/approval.ts";
 
 export default {
   fetch: withSupabase({ auth: "user" }, async (req, ctx) => {
@@ -16,12 +17,15 @@ export default {
       return Response.json({ error: "invalid JSON body" }, { status: 400 });
     }
 
-    const { locality, city, area, landmark, notes, owner, contact, lat, lng, sqft, ppsf, amenity_count, amenities } =
-      body as {
-        locality?: string; city?: string; area?: string; landmark?: string; notes?: string;
-        owner?: string; contact?: string; lat?: number; lng?: number; sqft?: number; ppsf?: number;
-        amenity_count?: number; amenities?: string[];
-      };
+    const {
+      locality, city, area, landmark, notes, owner, contact, lat, lng, sqft, ppsf, amenity_count, amenities,
+      planning_approval, planning_approval_number, rera_status, rera_number,
+    } = body as {
+      locality?: string; city?: string; area?: string; landmark?: string; notes?: string;
+      owner?: string; contact?: string; lat?: number; lng?: number; sqft?: number; ppsf?: number;
+      amenity_count?: number; amenities?: string[];
+      planning_approval?: string; planning_approval_number?: string; rera_status?: string; rera_number?: string;
+    };
 
     if (!locality || !city || !area || typeof lat !== "number" || typeof lng !== "number" || !sqft || !ppsf) {
       return Response.json(
@@ -29,6 +33,9 @@ export default {
         { status: 400 },
       );
     }
+
+    const approvalErr = validateApproval(body);
+    if (approvalErr) return Response.json({ error: approvalErr }, { status: 400 });
 
     // 12m proximity check — informational only, never blocks the publish.
     const { data: nearby, error: nearbyErr } = await ctx.supabase.rpc("nearby_plots", {
@@ -44,6 +51,7 @@ export default {
         locality, city, area, landmark, notes, owner, contact,
         location: `POINT(${lng} ${lat})`,
         sqft, ppsf, amenity_count,
+        planning_approval, planning_approval_number, rera_status, rera_number,
         submitted_by: ctx.userClaims!.id,
       })
       .select()
