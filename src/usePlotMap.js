@@ -12,6 +12,7 @@ function toAuthShape(user) {
     name: user.user_metadata?.full_name || user.user_metadata?.name || user.email || 'You',
     email: user.email,
     avatarUrl: user.user_metadata?.avatar_url || null,
+    memberSince: user.created_at,
   };
 }
 
