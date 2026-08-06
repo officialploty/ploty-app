@@ -140,24 +140,22 @@ export default function DetailContent({ sel, saved, onToggleSave, onContact }) {
       )}
 
       {d.landmarks.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div style={{ font: '700 11px/1 Manrope', color: '#6b7570', letterSpacing: '.12em' }}>📍 NEARBY PLACES</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 10px' }}>
-            {groupLandmarksByCategory(d.landmarks).map(([category, items]) => (
-              <div key={category} style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 0 }}>
-                <div style={{ font: '700 10px/1 Manrope', color: '#8a958f', letterSpacing: '.1em' }}>{CATEGORY_LABELS[category] || category.toUpperCase()}</div>
+          {groupLandmarksByCategory(d.landmarks).map(([category, items]) => (
+            <div key={category} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ font: '700 10px/1 Manrope', color: '#8a958f', letterSpacing: '.1em' }}>{CATEGORY_LABELS[category] || category.toUpperCase()}</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 {items.map((l) => (
-                  <div key={l.name} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '10px', borderRadius: 14, background: '#f6f9f7', border: '1px solid #e8ece9', minWidth: 0 }}>
-                    <span style={{ width: 30, height: 30, borderRadius: 9, background: '#ffffff', border: '1px solid #e8ece9', flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13 }}>{l.icon}</span>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0, flex: 1 }}>
-                      <span style={{ font: '700 11.5px/1.3 Manrope', color: INK, overflowWrap: 'break-word', wordBreak: 'break-word' }}>{l.name}</span>
-                      <span style={{ font: '500 10.5px/1 Manrope', color: '#6b7570' }}>{l.distanceKm} km · {l.driveTimeMin} min</span>
-                    </div>
+                  <div key={l.name} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 13px', borderRadius: 99, background: '#f6f9f7', border: '1px solid #e8ece9', font: '600 11.5px/1 Manrope', color: '#1a1e1c' }}>
+                    <span style={{ fontSize: 12 }}>{l.icon}</span>
+                    {l.name}
+                    <span style={{ color: '#8a958f', fontWeight: 500 }}>· {l.distanceKm} km</span>
                   </div>
                 ))}
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       )}
 
