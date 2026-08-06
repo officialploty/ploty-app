@@ -51,13 +51,6 @@ export default function DetailContent({ sel, saved, onToggleSave, onContact }) {
 
   return (
     <div style={{ padding: '6px 20px 42px', display: 'flex', flexDirection: 'column', gap: 18 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ padding: '7px 12px', borderRadius: 10, background: d.bandBg, display: 'flex', alignItems: 'center', gap: 6 }}>
-          {d.bandLabel === 'PREMIUM BAND' && <CrownIcon color={d.color} />}
-          <span style={{ font: '800 10px/1 Manrope', color: d.color, letterSpacing: '.1em' }}>{d.bandLabel}</span>
-        </div>
-      </div>
-
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 7, minWidth: 0 }}>
           {d.isPlot && (
@@ -77,13 +70,22 @@ export default function DetailContent({ sel, saved, onToggleSave, onContact }) {
             <PinIcon />{d.cityLine}
           </div>
         </div>
-        <div onClick={onToggleSave} style={{
-          width: 40, height: 40, borderRadius: 99, flex: 'none',
-          background: isSaved ? '#fbe9e9' : '#f6f9f7',
-          border: '1px solid ' + (isSaved ? '#f0c6c6' : '#e8ece9'),
-          display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-        }}>
-          <HeartIcon filled={isSaved} />
+        <div style={{ display: 'flex', gap: 8, flex: 'none' }}>
+          <div onClick={onContact} title={d.contactLabel} style={{
+            width: 40, height: 40, borderRadius: 99, flex: 'none',
+            background: '#e5f5ec', border: '1px solid #a8dcbf',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+          }}>
+            <PhoneIcon />
+          </div>
+          <div onClick={onToggleSave} style={{
+            width: 40, height: 40, borderRadius: 99, flex: 'none',
+            background: isSaved ? '#fbe9e9' : '#f6f9f7',
+            border: '1px solid ' + (isSaved ? '#f0c6c6' : '#e8ece9'),
+            display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+          }}>
+            <HeartIcon filled={isSaved} />
+          </div>
         </div>
       </div>
 
@@ -250,10 +252,10 @@ function AmenityIcon({ name }) {
   return Icon ? <Icon /> : <TagIcon />;
 }
 
-function CrownIcon({ color }) {
+function PhoneIcon() {
   return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-      <path d="M3 8l4 3 5-6 5 6 4-3-1.5 10h-15L3 8Z" stroke={color} strokeWidth="1.8" strokeLinejoin="round" />
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+      <path d="M6.5 3h3l1.5 4-2 1.5a11 11 0 0 0 5 5l1.5-2 4 1.5v3a2 2 0 0 1-2.2 2C10.5 17.5 6.5 13.5 4.5 6.2A2 2 0 0 1 6.5 3Z" stroke="#146b41" strokeWidth="1.8" strokeLinejoin="round" />
     </svg>
   );
 }
