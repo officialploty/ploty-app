@@ -129,7 +129,7 @@ export default function AddForm({ pm, onBackToPlacing }) {
           {(f.planningApproval === 'dtcp' || f.planningApproval === 'cmda') && (
             <input
               value={f.planningApprovalNumber} onChange={(e) => setForm('planningApprovalNumber', e.target.value)}
-              placeholder="Approval number (optional)" style={fieldStyle}
+              placeholder={(f.planningApproval === 'dtcp' ? 'DTCP' : 'CMDA') + ' approval number (required)'} style={fieldStyle}
             />
           )}
         </div>
@@ -154,7 +154,7 @@ export default function AddForm({ pm, onBackToPlacing }) {
           {f.reraStatus === 'registered' && (
             <input
               value={f.reraNumber} onChange={(e) => setForm('reraNumber', e.target.value)}
-              placeholder="RERA number (optional)" style={fieldStyle}
+              placeholder="RERA number (required)" style={fieldStyle}
             />
           )}
         </div>

@@ -368,8 +368,11 @@ export function usePlotMap() {
   const derivedPpsf = form.priceMode === 'ppsf' ? price : (size ? price / size : 0);
   const derivedTotal = form.priceMode === 'ppsf' ? price * size : price;
   const fb = band(derivedPpsf || 0);
+  const approvalNumberOk = form.planningApproval !== 'dtcp' && form.planningApproval !== 'cmda'
+    || !!form.planningApprovalNumber.trim();
+  const reraNumberOk = form.reraStatus !== 'registered' || !!form.reraNumber.trim();
   const canPublish = !!pin && !!form.locality.trim() && !!form.area
-    && !!form.planningApproval && !!form.reraStatus
+    && !!form.planningApproval && !!form.reraStatus && approvalNumberOk && reraNumberOk
     && (form.kind === 'layout'
       ? num(form.plots) > 0 && num(form.ppsfMin) > 0 && num(form.sizeMin) > 0 && !!form.company.trim()
       : derivedPpsf > 0 && size > 0);
