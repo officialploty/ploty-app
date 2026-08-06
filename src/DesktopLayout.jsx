@@ -52,13 +52,33 @@ export default function DesktopLayout({ pm }) {
 
         <div style={{ flex: 1 }} />
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 'none' }}>
-          <NavIconButton active={pm.tab === 'saved'} onClick={() => { pm.setTab('saved'); pm.closeDetail(); }} label="Saved plots">♥</NavIconButton>
-          <NavIconButton active={pm.tab === 'profile'} onClick={() => { pm.setTab('profile'); pm.closeDetail(); }} label="Your account">
-            {initials || <span style={{ width: 15, height: 15, borderRadius: 99, border: '2px solid currentColor', display: 'block' }} />}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 'none' }}>
+          <NavIconButton active={pm.tab === 'saved'} onClick={() => { pm.setTab('saved'); pm.closeDetail(); }} label="Saved plots">
+            <HeaderHeartIcon filled={pm.tab === 'saved'} />
           </NavIconButton>
-          <div onClick={pm.startAdd} style={{ display: 'flex', alignItems: 'center', gap: 8, height: 38, padding: '0 18px', borderRadius: 99, background: '#111214', cursor: 'pointer' }}>
-            <span style={{ font: '800 12.5px/1 Manrope', color: '#fff', letterSpacing: '.02em' }}>+ Register a plot</span>
+          <div
+            onClick={() => { pm.setTab('profile'); pm.closeDetail(); }}
+            title="Your account"
+            style={{
+              width: 38, height: 38, borderRadius: 99, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+              background: pm.tab === 'profile' ? 'linear-gradient(130deg,#1f9d64,#8355c9)' : '#f6f9f7',
+              border: '1px solid ' + (pm.tab === 'profile' ? 'transparent' : '#e5e9e6'),
+              boxShadow: pm.tab === 'profile' ? '0 4px 12px -4px rgba(131,85,201,.5)' : 'none',
+            }}
+          >
+            {initials
+              ? <span style={{ font: '800 12px/1 Manrope', color: pm.tab === 'profile' ? '#fff' : '#495650' }}>{initials}</span>
+              : <span style={{ width: 15, height: 15, borderRadius: 99, border: '2px solid ' + (pm.tab === 'profile' ? '#fff' : '#495650'), display: 'block' }} />}
+          </div>
+          <div
+            onClick={pm.startAdd}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 7, height: 38, padding: '0 18px', borderRadius: 99, cursor: 'pointer',
+              background: 'linear-gradient(110deg,#1f9d64,#8355c9)', boxShadow: '0 6px 16px -6px rgba(131,85,201,.55)',
+            }}
+          >
+            <PlusIcon />
+            <span style={{ font: '800 12.5px/1 Manrope', color: '#fff', letterSpacing: '.02em' }}>Register a plot</span>
           </div>
         </div>
       </div>
@@ -177,6 +197,22 @@ export default function DesktopLayout({ pm }) {
         </div>
       )}
     </div>
+  );
+}
+
+function HeaderHeartIcon({ filled }) {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill={filled ? '#1f9d64' : 'none'}>
+      <path d="M12 20.5s-7.5-4.6-10-9.3C.5 7.8 2.3 4 6 4c2 0 3.5 1.1 6 3.5C14.5 5.1 16 4 18 4c3.7 0 5.5 3.8 4 7.2-2.5 4.7-10 9.3-10 9.3Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function PlusIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+      <path d="M12 5v14M5 12h14" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" />
+    </svg>
   );
 }
 
