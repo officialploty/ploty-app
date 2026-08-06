@@ -20,6 +20,16 @@ function daysSince(iso) {
   return Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86400000));
 }
 
+// updated_at defaults to the same instant as created_at on insert (both
+// `now()`), and only moves forward on a real edit (set_updated_at trigger).
+// A >1s gap is a genuine edit, not clock/trigger rounding noise — used to
+// decide whether a listing should read "Listed" (from created_at) or
+// "Updated" (from updated_at, more relevant once it's been edited).
+function wasEdited(row) {
+  if (!row.created_at || !row.updated_at) return false;
+  return new Date(row.updated_at).getTime() - new Date(row.created_at).getTime() > 1000;
+}
+
 // Maps a real `plots`/`layouts` row from Supabase into the shape the UI
 // already expects (unchanged from the prototype's mock data shape).
 // `media` is attached separately by the caller (loadListings/publish) since
@@ -33,6 +43,7 @@ function mapDbPlot(row) {
     notes: row.notes || 'No additional notes provided by the lister.',
     owner: row.owner || 'Unknown', landmark: row.landmark || 'Pinned by lister',
     contact: row.contact || 'Not shared', days: daysSince(row.created_at),
+    updatedDays: daysSince(row.updated_at), wasEdited: wasEdited(row),
     planningApproval: row.planning_approval, planningApprovalNumber: row.planning_approval_number,
     reraStatus: row.rera_status, reraNumber: row.rera_number,
     amenities: [], media: [], landmarks: [], submittedBy: row.submitted_by, updatedAt: row.updated_at,
@@ -49,7 +60,8 @@ function mapDbLayout(row) {
     contact: row.contact || 'Not shared',
     planningApproval: row.planning_approval, planningApprovalNumber: row.planning_approval_number,
     reraStatus: row.rera_status, reraNumber: row.rera_number,
-    days: daysSince(row.created_at), amenities: [], media: [], landmarks: [],
+    days: daysSince(row.created_at), updatedDays: daysSince(row.updated_at), wasEdited: wasEdited(row),
+    amenities: [], media: [], landmarks: [],
     status: row.status, submittedBy: row.submitted_by, updatedAt: row.updated_at,
   };
 }

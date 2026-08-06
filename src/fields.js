@@ -21,6 +21,18 @@ export function approvalBadges(p) {
   return { planning, rera };
 }
 
+// "Listed" reflects created_at; once a listing has actually been edited
+// (wasEdited, computed in usePlotMap.js from updated_at vs created_at),
+// "Updated" from updated_at is more relevant — a 2-year-old listing edited
+// this morning should read "Updated today," not "Listed 730 days ago."
+function ageLabel(p, capitalized) {
+  const verb = capitalized ? (p.wasEdited ? 'Updated' : 'Listed') : (p.wasEdited ? 'updated' : 'listed');
+  const d = p.wasEdited ? p.updatedDays : p.days;
+  if (d === 0) return verb + ' today';
+  if (d === 1) return verb + ' yesterday';
+  return verb + ' ' + d + ' days ago';
+}
+
 export function listCardFields(p) {
   const isLayout = p.kind === 'layout';
   // p.landmarks is already ranked by importance (category weight + distance)
@@ -42,7 +54,7 @@ export function listCardFields(p) {
     totalPricePrefix: isLayout ? 'From' : null,
     totalPriceLabel: isLayout ? inr(p.sizeMin * p.ppsf) : inr(p.sqft * p.ppsf),
     plotsCountLabel: isLayout ? String(p.plots) : '1',
-    age: p.days === 1 ? 'Listed yesterday' : 'Listed ' + p.days + ' days ago',
+    age: ageLabel(p, true),
     distanceLabel: nearest ? nearest.distanceKm + ' km' : '—',
     distanceLandmark: nearest ? nearest.name : 'No data yet',
     approval: approvalBadges(p),
@@ -83,7 +95,7 @@ export function detailFields(sel) {
     noMedia: sel.media.length === 0,
     mediaCount: sel.media.length ? photoCount + ' photo' + (photoCount === 1 ? '' : 's') + (hasVideo ? ' + video' : '') : 'None',
     notes: sel.notes, owner: sel.owner, amenities: sel.amenities || [], landmarks: sel.landmarks || [],
-    age: sel.days === 1 ? 'listed yesterday' : 'listed ' + sel.days + ' days ago',
+    age: ageLabel(sel, false),
     coords: sel.lat.toFixed(5) + '° N, ' + sel.lng.toFixed(5) + '° E',
     landmark: sel.landmark,
     contactLabel: sel.contact === 'Not shared' ? 'No contact shared'
