@@ -171,16 +171,16 @@ function StatCard({ label, value, bg, border, valueColor, onClick }) {
 }
 
 function ListingsSection({ pm }) {
-  const { myListings, addMediaToListing, startEdit } = pm;
+  const { myListings, startEdit } = pm;
   return (
     <div style={{ padding: '20px 20px 0', display: 'flex', flexDirection: 'column', gap: 14 }}>
       <span style={{ font: '800 20px/1 Manrope', color: INK, letterSpacing: '-.01em' }}>My Listings</span>
       {myListings.length === 0 ? (
         <div style={{ padding: '40px 10px', textAlign: 'center', font: '500 13px/1.6 Manrope', color: '#8a958f' }}>You haven't registered any plots or layouts yet.</div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 12 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {myListings.map((l) => (
-            <MyListingCard key={l.id} listing={l} onAddMedia={(files) => addMediaToListing(l, files)} onEdit={() => startEdit(l)} />
+            <MyListingRow key={l.id} listing={l} onEdit={() => startEdit(l)} />
           ))}
         </div>
       )}
@@ -188,34 +188,25 @@ function ListingsSection({ pm }) {
   );
 }
 
-function MyListingCard({ listing, onAddMedia, onEdit }) {
+function MyListingRow({ listing, onEdit }) {
   const statusLabel = listing.kind === 'layout' ? (listing.status || 'approved') : 'live';
   const statusColor = statusLabel === 'pending' ? '#d98a1f' : statusLabel === 'rejected' ? '#d64545' : '#146b41';
+  const statusBg = statusLabel === 'pending' ? '#fdf3e2' : statusLabel === 'rejected' ? '#fbe9e9' : '#e5f5ec';
   const thumb = listing.media[0];
   const thumbBg = thumb ? (thumb.url ? 'url("' + thumb.url + '") center/cover' + (thumb.bg ? ', ' + thumb.bg : '') : thumb.bg) : null;
 
   return (
-    <div style={{ display: 'flex', gap: 12, padding: 12, borderRadius: 18, background: '#ffffff', border: '1px solid #e8ece9' }}>
-      <div style={{ width: 64, height: 64, borderRadius: 12, flex: 'none', background: thumbBg || '#f2f5f3', backgroundSize: 'cover', backgroundPosition: 'center', border: '1px solid #e8ece9' }} />
-      <div style={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <div style={{ minWidth: 0 }}>
-          <div style={{ font: '700 13.5px/1.25 Manrope', color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{listing.locality}</div>
-          <div style={{ font: '600 10.5px/1.4 Manrope', color: '#8a958f', letterSpacing: '.03em' }}>
-            {listing.area?.toUpperCase()} · {listing.media.length} PHOTO{listing.media.length === 1 ? '' : 'S'} · <span style={{ color: statusColor }}>{statusLabel.toUpperCase()}</span>
-          </div>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 16px', borderRadius: 16, background: '#ffffff', border: '1px solid #e8ece9' }}>
+      <div style={{ width: 52, height: 52, borderRadius: 12, flex: 'none', background: thumbBg || '#f2f5f3', backgroundSize: 'cover', backgroundPosition: 'center', border: '1px solid #e8ece9' }} />
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <div style={{ font: '700 14px/1.3 Manrope', color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{listing.locality}</div>
+        <div style={{ font: '600 11px/1.4 Manrope', color: '#8a958f', letterSpacing: '.03em' }}>
+          {listing.area?.toUpperCase()} · {listing.media.length} PHOTO{listing.media.length === 1 ? '' : 'S'}
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <div onClick={onEdit} style={{ flex: 1, height: 32, borderRadius: 10, background: '#f1ecfa', border: '1px solid #d9caf0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-            <span style={{ font: '700 11px/1 Manrope', color: '#6a3fb0' }}>Edit</span>
-          </div>
-          <label style={{ flex: 1, height: 32, borderRadius: 10, background: '#e5f5ec', border: '1px solid #a8dcbf', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-            <span style={{ font: '700 11px/1 Manrope', color: '#1f9d64' }}>Add photos</span>
-            <input
-              type="file" multiple accept="image/*,video/*" style={{ display: 'none' }}
-              onChange={(e) => { onAddMedia(Array.from(e.target.files || [])); e.target.value = ''; }}
-            />
-          </label>
-        </div>
+      </div>
+      <span style={{ flex: 'none', padding: '5px 10px', borderRadius: 8, background: statusBg, font: '800 10px/1 Manrope', color: statusColor, letterSpacing: '.06em' }}>{statusLabel.toUpperCase()}</span>
+      <div onClick={onEdit} style={{ flex: 'none', height: 36, padding: '0 18px', borderRadius: 11, background: '#f1ecfa', border: '1px solid #d9caf0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+        <span style={{ font: '700 12px/1 Manrope', color: '#6a3fb0' }}>Edit</span>
       </div>
     </div>
   );
