@@ -251,6 +251,19 @@ create policy "owners can attach media to their own plots"
     ))
   );
 
+create policy "owners can delete their own media"
+  on public.media for delete
+  to authenticated
+  using (
+    (owner_type = 'plot' and exists (
+      select 1 from public.plots where plots.id = owner_id and plots.submitted_by = auth.uid()
+    ))
+    or
+    (owner_type = 'layout' and exists (
+      select 1 from public.layouts where layouts.id = owner_id and layouts.submitted_by = auth.uid()
+    ))
+  );
+
 
 -- ============================================================
 -- LISTING_AMENITIES — join table

@@ -20,3 +20,13 @@ create policy "authenticated users can upload into their own folder"
     bucket_id = 'listing-media'
     and (storage.foldername(name))[1] = auth.uid()::text
   );
+
+-- owners can remove an individual photo/video from their own listing —
+-- same own-folder check as the upload policy above
+create policy "authenticated users can delete from their own folder"
+  on storage.objects for delete
+  to authenticated
+  using (
+    bucket_id = 'listing-media'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );

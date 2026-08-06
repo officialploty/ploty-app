@@ -191,7 +191,10 @@ export function usePlotMap() {
       const key = row.owner_type + ':' + row.owner_id;
       const { data: { publicUrl } } = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(row.storage_path);
       const list = mediaByOwner.get(key) || [];
-      list.push({ url: publicUrl, type: row.type });
+      // id + storagePath carried through so an existing item can later be
+      // deleted (removeMedia below) — new, not-yet-uploaded items from
+      // onFiles() have neither, which is how the UI tells them apart.
+      list.push({ id: row.id, storagePath: row.storage_path, url: publicUrl, type: row.type });
       mediaByOwner.set(key, list);
     }
 
@@ -336,6 +339,7 @@ export function usePlotMap() {
       planningApprovalNumber: listing.planningApprovalNumber || '',
       reraStatus: listing.reraStatus || '',
       reraNumber: listing.reraNumber || '',
+      media: listing.media.slice(),
     });
     setMode('form');
     setTab('map');
@@ -643,12 +647,28 @@ export function usePlotMap() {
     setForm('media', form.media.concat(add));
   }, [form.media, flash, setForm]);
 
+  // Removes one photo/video from the in-progress form. Items with an `.id`
+  // are already persisted (loaded from the listing being edited) and get
+  // actually deleted from Storage + the media table, not just hidden —
+  // items without one are unsaved uploads picked via onFiles(), so there's
+  // nothing in the backend yet to clean up.
+  const removeMedia = useCallback(async (item) => {
+    if (item.id && editingId) {
+      const { error: storageErr } = await supabase.storage.from(MEDIA_BUCKET).remove([item.storagePath]);
+      if (storageErr) console.error('media storage delete failed:', storageErr.message);
+      const { error: rowErr } = await supabase.from('media').delete().eq('id', item.id);
+      if (rowErr) { flash('Could not remove photo'); return; }
+      setPlots((prev) => prev.map((p) => (p.id === editingId ? { ...p, media: p.media.filter((m) => m.id !== item.id) } : p)));
+    }
+    setFormState((f) => ({ ...f, media: f.media.filter((m) => m !== item) }));
+  }, [editingId, flash]);
+
   return {
     plots, plotsLoading, visible, sel, tab, city, area, query, focus, cityMenu, areaMenu, sort, kindFilter,
     ppsfRange, setPpsfRange, totalPriceRange, setTotalPriceRange, sqftRange, setSqftRange,
     mode, pin, form, saved, toast, placing, choosingKind, formOpen, detailOpen,
     derivedPpsf, derivedTotal, fb, canPublish, publishing, nearbyDuplicates, pendingLayouts, myListings, addMediaToListing,
-    editingId, startEdit,
+    editingId, startEdit, removeMedia,
     auth, authPrompt, openAuthPrompt, cancelAuthPrompt, loginWithGoogle, logout,
     setTab, setQuery, setFocus, setCityMenu, setAreaMenu, setSort, setKindFilter,
     setForm, setPin,

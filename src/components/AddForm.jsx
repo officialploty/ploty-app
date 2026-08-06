@@ -1,14 +1,19 @@
+import { useState } from 'react';
 import { AMENITIES, CITIES } from '../data';
-import { inr, ppsfLabel, kShort, num } from '../utils';
+import { inr, ppsfLabel, kShort, num, titleCase } from '../utils';
 
 const label = { font: '700 11px/1 Manrope', color: '#6b7570', letterSpacing: '.12em' };
 const fieldStyle = { height: 52, padding: '0 16px', borderRadius: 16, background: '#f6f9f7', border: '1px solid #e5e9e6', outline: 0, font: '600 15px/1 Manrope', color: '#1a1e1c' };
 
 export default function AddForm({ pm, onBackToPlacing }) {
-  const { form, setForm, pin, city, derivedPpsf, derivedTotal, fb, canPublish, publishing, publish, cancelAdd, onFiles, auth, backToKind, editingId } = pm;
+  const { form, setForm, pin, city, derivedPpsf, derivedTotal, fb, canPublish, publishing, publish, cancelAdd, onFiles, removeMedia, auth, backToKind, editingId } = pm;
   const f = form;
   const isEditing = !!editingId;
   const areaOptions = CITIES[city].areas.filter((a) => a !== 'All areas');
+  // Starts in "custom" mode if the listing being edited already has an area
+  // that isn't in this city's predefined list, so re-opening the form for
+  // editing doesn't silently drop back to the dropdown with a blank value.
+  const [customArea, setCustomArea] = useState(() => !!f.area && !areaOptions.includes(f.area));
 
   return (
     <div style={{ padding: '8px 20px 40px', display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -47,21 +52,44 @@ export default function AddForm({ pm, onBackToPlacing }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={label}>AREA</div>
-        <select
-          value={f.area} onChange={(e) => setForm('area', e.target.value)}
-          style={{ ...fieldStyle, appearance: 'auto' }}
-        >
-          <option value="" disabled>Select the area this pin is actually in</option>
-          {areaOptions.map((a) => <option key={a} value={a}>{a}</option>)}
-        </select>
+        {!customArea ? (
+          <select
+            value={f.area}
+            onChange={(e) => {
+              if (e.target.value === '__other__') { setCustomArea(true); setForm('area', ''); }
+              else setForm('area', e.target.value);
+            }}
+            style={{ ...fieldStyle, appearance: 'auto' }}
+          >
+            <option value="" disabled>Select the area this pin is actually in</option>
+            {areaOptions.map((a) => <option key={a} value={a}>{a}</option>)}
+            <option value="__other__">Can't find it? Type your own</option>
+          </select>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <input
+              value={f.area}
+              onChange={(e) => setForm('area', e.target.value)}
+              onBlur={(e) => setForm('area', titleCase(e.target.value))}
+              placeholder="Type the area name"
+              style={fieldStyle}
+            />
+            <span
+              onClick={() => { setCustomArea(false); setForm('area', ''); }}
+              style={{ font: '700 11.5px/1 Manrope', color: '#1f9d64', cursor: 'pointer', alignSelf: 'flex-start' }}
+            >
+              ← Choose from list instead
+            </span>
+          </div>
+        )}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-          <div style={label}>{isEditing ? 'ADD MORE PHOTOS & VIDEO' : 'PHOTOS & VIDEO'}</div>
+          <div style={label}>PHOTOS & VIDEO</div>
           <div style={{ font: '600 11px/1 Manrope', color: '#8a958f' }}>{f.media.length ? f.media.length + ' added' : 'optional, up to 8'}</div>
         </div>
-        {isEditing && <div style={{ font: '500 11.5px/1.5 Manrope', color: '#6b7570', marginTop: -4 }}>These are added on top of your existing photos, not a replacement for them.</div>}
+        {isEditing && <div style={{ font: '500 11.5px/1.5 Manrope', color: '#6b7570', marginTop: -4 }}>Tap × to remove an existing photo — it's deleted right away, not just hidden until you save.</div>}
         <div className="pmScroll" style={{ display: 'flex', gap: 9, overflowX: 'auto', paddingBottom: 2 }}>
           <label style={{ flex: 'none', width: 96, height: 96, borderRadius: 16, border: '1.5px dashed #a8dcbf', background: '#e5f5ec', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 7, cursor: 'pointer' }}>
             <div style={{ position: 'relative', width: 18, height: 18 }}>
@@ -72,8 +100,8 @@ export default function AddForm({ pm, onBackToPlacing }) {
             <input type="file" multiple accept="image/*,video/*" onChange={(e) => { onFiles(Array.from(e.target.files || [])); e.target.value = ''; }} style={{ display: 'none' }} />
           </label>
           {f.media.map((m, i) => (
-            <div key={i} style={{ flex: 'none', width: 96, height: 96, borderRadius: 16, overflow: 'hidden', position: 'relative', background: m.url ? 'url("' + m.url + '") center/cover, ' + m.bg : m.bg, border: '1px solid #e5e9e6' }}>
-              <div onClick={() => setForm('media', f.media.filter((_, k) => k !== i))} style={{ position: 'absolute', top: 6, right: 6, width: 22, height: 22, borderRadius: 99, background: 'rgba(20,24,22,.68)', color: '#fff', font: '600 13px/22px Manrope', textAlign: 'center', cursor: 'pointer' }}>×</div>
+            <div key={m.id || i} style={{ flex: 'none', width: 96, height: 96, borderRadius: 16, overflow: 'hidden', position: 'relative', background: m.url ? ('url("' + m.url + '") center/cover' + (m.bg ? ', ' + m.bg : '')) : m.bg, border: '1px solid #e5e9e6' }}>
+              <div onClick={() => removeMedia(m)} style={{ position: 'absolute', top: 6, right: 6, width: 22, height: 22, borderRadius: 99, background: 'rgba(20,24,22,.68)', color: '#fff', font: '600 13px/22px Manrope', textAlign: 'center', cursor: 'pointer' }}>×</div>
               <div style={{ position: 'absolute', left: 7, bottom: 7, padding: '3px 6px', borderRadius: 6, background: 'rgba(20,24,22,.68)', font: '700 9px/1 Manrope', color: '#fff', letterSpacing: '.1em' }}>{m.type === 'video' ? 'VIDEO' : 'PHOTO'}</div>
             </div>
           ))}

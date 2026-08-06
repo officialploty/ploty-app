@@ -26,6 +26,10 @@ export const num = (s) => {
   return isFinite(n) ? n : 0;
 };
 
+export function titleCase(s) {
+  return s.replace(/\w\S*/g, (w) => w[0].toUpperCase() + w.slice(1).toLowerCase());
+}
+
 // Deliberately tight — flags near-exact duplicate pins without nagging
 // listers registering genuinely separate neighboring plots.
 export const NEARBY_THRESHOLD_M = 12;
