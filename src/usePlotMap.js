@@ -544,6 +544,25 @@ export function usePlotMap() {
     supabase.auth.signOut();
   }, []);
 
+  const [deletingAccount, setDeletingAccount] = useState(false);
+
+  // Irreversible — the Edge Function tears down every plot/layout the
+  // caller owns (and their media/amenities/landmarks/others' favorites
+  // pointing at them) before deleting the auth user itself. Confirmation
+  // lives in the UI (AccountSection), not here.
+  const deleteAccount = useCallback(async () => {
+    setDeletingAccount(true);
+    try {
+      await callEdgeFunction('delete-account', {});
+      await supabase.auth.signOut();
+      flash('Account deleted');
+    } catch (err) {
+      flash('Could not delete account: ' + err.message);
+    } finally {
+      setDeletingAccount(false);
+    }
+  }, [flash]);
+
   const startAdd = useCallback(() => {
     if (!auth) { openAuthPrompt('register'); return; }
     doStartAdd();
@@ -682,7 +701,7 @@ export function usePlotMap() {
     mode, pin, form, saved, toast, placing, choosingKind, formOpen, detailOpen,
     derivedPpsf, derivedTotal, fb, canPublish, publishing, nearbyDuplicates, pendingLayouts, myListings, addMediaToListing,
     editingId, startEdit, removeMedia,
-    auth, authPrompt, openAuthPrompt, cancelAuthPrompt, loginWithGoogle, logout,
+    auth, authPrompt, openAuthPrompt, cancelAuthPrompt, loginWithGoogle, logout, deleteAccount, deletingAccount,
     setTab, setQuery, setFocus, setCityMenu, setAreaMenu, setSort, setKindFilter,
     setForm, setPin,
     open, goCity, goArea, startAdd, cancelAdd, backToPlacing, backToKind, chooseKind, confirmLocation, publish,

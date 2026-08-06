@@ -6,11 +6,11 @@ import ListPanel from './components/ListPanel';
 import AddForm from './components/AddForm';
 import KindChoice from './components/KindChoice';
 import DetailContent from './components/DetailContent';
-import SavedPanel from './components/SavedPanel';
 import ProfilePanel from './components/ProfilePanel';
-import ReviewPanel from './components/ReviewPanel';
 import AuthPromptContent from './components/AuthPromptContent';
 import { NearbyWarning, PinControls } from './components/PlacingControls';
+
+const PROFILE_TABS = ['profile', 'listings', 'saved', 'review', 'account'];
 
 export default function MobileLayout({ pm }) {
   const mapRef = useRef(null);
@@ -79,24 +79,9 @@ export default function MobileLayout({ pm }) {
         </div>
       )}
 
-      {pm.tab === 'saved' && (
-        <div className="pmScroll" style={{ position: 'absolute', inset: 0, zIndex: 700, background: '#f4f7f5', animation: 'pmFade .2s ease', paddingTop: 'calc(env(safe-area-inset-top,0px) + 46px)', overflowY: 'auto' }}>
-          <SavedPanel pm={pm} />
-        </div>
-      )}
-
-      {pm.tab === 'profile' && (
-        <div className="pmScroll" style={{ position: 'absolute', inset: 0, zIndex: 700, background: '#f4f7f5', animation: 'pmFade .2s ease', paddingTop: 'calc(env(safe-area-inset-top,0px) + 46px)', overflowY: 'auto' }}>
+      {PROFILE_TABS.includes(pm.tab) && (
+        <div className="pmScroll" style={{ position: 'absolute', inset: 0, zIndex: 700, background: '#f4f7f5', animation: 'pmFade .2s ease', paddingTop: 'env(safe-area-inset-top,0px)', overflowY: 'auto' }}>
           <ProfilePanel pm={pm} />
-        </div>
-      )}
-
-      {pm.tab === 'review' && (
-        <div style={{ position: 'absolute', inset: 0, zIndex: 700, background: '#f4f7f5', animation: 'pmFade .2s ease', paddingTop: 'env(safe-area-inset-top,0px)', display: 'flex', flexDirection: 'column' }}>
-          <div onClick={() => pm.setTab('profile')} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '16px 18px 0', cursor: 'pointer' }}>
-            <span style={{ font: '700 12px/1 Manrope', color: '#1f9d64' }}>← Back to profile</span>
-          </div>
-          <ReviewPanel pm={pm} />
         </div>
       )}
 
@@ -184,8 +169,8 @@ export default function MobileLayout({ pm }) {
           <TabButton onClick={() => { pm.setTab('saved'); pm.closeDetail(); pm.setFocus(false); }} active={pm.tab === 'saved'} label="Saved">
             <span style={{ font: '700 15px/1 Manrope', color: pm.tab === 'saved' ? '#d64545' : '#a3aca6' }}>♥</span>
           </TabButton>
-          <TabButton onClick={() => { pm.setTab('profile'); pm.closeDetail(); pm.setFocus(false); }} active={pm.tab === 'profile'} label="You">
-            <div style={{ width: 17, height: 17, borderRadius: 99, border: '2px solid ' + (pm.tab === 'profile' ? '#1f9d64' : '#a3aca6') }} />
+          <TabButton onClick={() => { pm.setTab('profile'); pm.closeDetail(); pm.setFocus(false); }} active={PROFILE_TABS.includes(pm.tab) && pm.tab !== 'saved'} label="You">
+            <div style={{ width: 17, height: 17, borderRadius: 99, border: '2px solid ' + (PROFILE_TABS.includes(pm.tab) && pm.tab !== 'saved' ? '#1f9d64' : '#a3aca6') }} />
           </TabButton>
         </div>
       )}

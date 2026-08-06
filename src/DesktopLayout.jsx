@@ -6,11 +6,11 @@ import FilterSidebar from './components/FilterSidebar';
 import AddForm from './components/AddForm';
 import KindChoice from './components/KindChoice';
 import DetailContent from './components/DetailContent';
-import SavedPanel from './components/SavedPanel';
 import ProfilePanel from './components/ProfilePanel';
-import ReviewPanel from './components/ReviewPanel';
 import AuthPromptContent from './components/AuthPromptContent';
 import { NearbyWarning, PinControls } from './components/PlacingControls';
+
+const PROFILE_TABS = ['profile', 'listings', 'saved', 'review', 'account'];
 
 export default function DesktopLayout({ pm }) {
   const mapRef = useRef(null);
@@ -27,7 +27,7 @@ export default function DesktopLayout({ pm }) {
   const ly = pm.visible.filter((p) => p.kind === 'layout').length;
   const si = pm.visible.length - ly;
   const nearbyLabel = si + (si === 1 ? ' plot' : ' plots') + (ly ? ' · ' + ly + (ly === 1 ? ' layout' : ' layouts') : '') + ' nearby';
-  const browsing = pm.tab !== 'saved' && pm.tab !== 'profile' && pm.tab !== 'review';
+  const browsing = !PROFILE_TABS.includes(pm.tab);
   const listing = browsing && !pm.placing && !pm.choosingKind && !pm.formOpen && !pm.detailOpen;
   const initials = pm.auth ? (pm.auth.name.split(' ').filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join('') || '?') : null;
 
@@ -84,17 +84,9 @@ export default function DesktopLayout({ pm }) {
       </div>
 
       <div style={{ flex: 1, display: 'flex', minHeight: 0, position: 'relative' }}>
-      {pm.tab === 'profile' || pm.tab === 'review' ? (
+      {PROFILE_TABS.includes(pm.tab) ? (
         <div className="pmScroll" style={{ width: '100%', overflowY: 'auto', background: '#f4f7f5' }}>
-          {pm.tab === 'profile' && <ProfilePanel pm={pm} />}
-          {pm.tab === 'review' && (
-            <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
-              <div onClick={() => pm.setTab('profile')} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '20px 32px 0', cursor: 'pointer' }}>
-                <span style={{ font: '700 12px/1 Manrope', color: '#1f9d64' }}>← Back to profile</span>
-              </div>
-              <ReviewPanel pm={pm} />
-            </div>
-          )}
+          <ProfilePanel pm={pm} />
         </div>
       ) : (
         <>
@@ -138,8 +130,6 @@ export default function DesktopLayout({ pm }) {
                     <DetailContent sel={pm.sel} saved={pm.saved} onToggleSave={pm.toggleSave} onContact={pm.contact} />
                   </div>
                 )}
-
-                {pm.tab === 'saved' && <SavedPanel pm={pm} />}
               </div>
             </div>
           )}
